@@ -60,12 +60,14 @@ nexo-tool-meta       = { version = "0.1.0",  path = "../proyecto/crates/tool-met
 
 # Upstream wa-agent — wraps Signal Protocol + QR pairing + Bot API.
 # Pinned to the same git rev the proyecto workspace patches in
-# (Phase 82.10.q). Newer than crates.io 0.1.1 — exposes the
-# `ChatPresenceState`, `TypingMode`, `RunAgentOpts` and
-# `send_chat_presence` / `run_agent_with_opts` APIs the plugin
-# code calls. Switching to a crates.io pin will land with the
-# wider proyecto crates publish wave (`81.18.c`).
-wa-agent = { git = "https://github.com/lordmacu/whatsapp-rs", rev = "3970dcca644db7d17172766ed0dfe00fd644cfdc" }
+# (Phase 82.10.q + the c9ccec0 TLS feature split). Newer than
+# crates.io 0.1.1 — exposes the `ChatPresenceState`, `TypingMode`,
+# `RunAgentOpts`, `send_chat_presence`, `run_agent_with_opts` APIs
+# the plugin code calls + the `default = ["native-tls"]` /
+# `rustls-tls` feature gate the Phase 90 mobile build flips on.
+# Switching to a crates.io pin lands with the wider proyecto
+# crates publish wave (`81.18.c`).
+wa-agent = { git = "https://github.com/lordmacu/whatsapp-rs", rev = "c9ccec0" }
 
 # Standard async + serde + crypto + media + tracing
 tokio              = { version = "1", features = ["rt-multi-thread", "macros", "sync", "io-util", "time", "process"] }
