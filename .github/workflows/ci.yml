@@ -1,0 +1,45 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+env:
+  CARGO_TERM_COLOR: always
+  RUSTFLAGS: -D warnings
+
+jobs:
+  build-test:
+    name: build + test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          path: nexo-rs-plugin-whatsapp
+      # Path-deps to `../proyecto/crates/...` + sibling
+      # `nexo-rs-plugin-telegram` (referenced through the proyecto
+      # workspace's own path-deps). Both must check out alongside
+      # this plugin or `cargo build` dies on missing manifests.
+      - uses: actions/checkout@v4
+        with:
+          repository: lordmacu/nexo-rs
+          path: proyecto
+      - uses: actions/checkout@v4
+        with:
+          repository: lordmacu/nexo-plugin-telegram
+          path: nexo-rs-plugin-telegram
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: clippy, rustfmt
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: nexo-rs-plugin-whatsapp
+      - working-directory: nexo-rs-plugin-whatsapp
+        run: cargo fmt --all -- --check
+      - working-directory: nexo-rs-plugin-whatsapp
+        run: cargo clippy --all-targets --no-deps -- -D warnings
+      - working-directory: nexo-rs-plugin-whatsapp
+        run: cargo build --locked
+      - working-directory: nexo-rs-plugin-whatsapp
+        run: cargo test --locked
