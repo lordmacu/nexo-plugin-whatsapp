@@ -34,14 +34,29 @@ name = "nexo-plugin-whatsapp"
 path = "src/main.rs"
 
 [features]
-default = []
+# Default keeps the OpenSSL TLS stack via wa-agent's
+# `native-tls` feature. Existing operators get byte-equivalent
+# behaviour without flipping any flags.
+default = ["native-tls"]
+
 # Mobile / in-process consumer drops the subprocess loop + tool
 # dispatch helpers. Lib re-exports stay so the host can import
 # `WhatsappPlugin` directly through the factory builder.
 embedded = []
-# Reserved for Phase 90 — feature-gate to swap native-tls →
-# rustls and trim media disk paths for the Android NDK build.
-mobile = []
+
+# Phase 90 mobile (Android NDK) — pure-rustls TLS stack so the
+# binary cross-compiles cleanly without OpenSSL system headers.
+# Mutually exclusive with `native-tls`; consumers pinning this
+# feature must also set `default-features = false`.
+mobile = ["rustls-tls"]
+
+# Explicit TLS backend selectors. Forwarded to the wa-agent
+# upstream feature gate (`c9ccec0` + later) so the plugin's
+# choice cascades all the way to `tokio-tungstenite`'s TLS
+# backend.
+native-tls = ["wa-agent/native-tls"]
+rustls-tls = ["wa-agent/rustls-tls"]
+
 # E2E live WhatsApp test (preserves existing gate; requires a
 # paired device).
 live-wa = []
@@ -67,7 +82,7 @@ nexo-tool-meta       = { version = "0.1.0",  path = "../proyecto/crates/tool-met
 # `rustls-tls` feature gate the Phase 90 mobile build flips on.
 # Switching to a crates.io pin lands with the wider proyecto
 # crates publish wave (`81.18.c`).
-wa-agent = { git = "https://github.com/lordmacu/whatsapp-rs", rev = "c9ccec0" }
+wa-agent = { git = "https://github.com/lordmacu/whatsapp-rs", rev = "c9ccec0", default-features = false }
 
 # Standard async + serde + crypto + media + tracing
 tokio              = { version = "1", features = ["rt-multi-thread", "macros", "sync", "io-util", "time", "process"] }
