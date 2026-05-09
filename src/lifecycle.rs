@@ -193,11 +193,20 @@ async fn forward(
         return Ok(());
     }
     if let whatsapp_rs::MessageEvent::Typing { jid, composing } = &ev {
+        let now_ms = std::time::SystemTime::now()
+            .duration_since(std::time::UNIX_EPOCH)
+            .map(|d| d.as_millis() as u64)
+            .unwrap_or(0);
+
+        // Phase 82.10.r — in-process emitter path. Used when the
+        // plugin runs inside the daemon (legacy embedded path
+        // before 81.18.b.2). After the subprocess flip the
+        // emitter is `None`; the broker publish below covers the
+        // subprocess path so daemon-side subscribers
+        // (`spawn_whatsapp_typing_presence_subscriber`) still
+        // surface `AgentEventKind::PeerTyping` on the live SSE
+        // firehose.
         if let Some(emitter) = event_emitter {
-            let now_ms = std::time::SystemTime::now()
-                .duration_since(std::time::UNIX_EPOCH)
-                .map(|d| d.as_millis() as u64)
-                .unwrap_or(0);
             let evt = nexo_tool_meta::admin::agent_events::AgentEventKind::PeerTyping {
                 channel: "whatsapp".to_string(),
                 account_id: instance_label.to_string(),
@@ -209,6 +218,29 @@ async fn forward(
             };
             emitter.emit(evt).await;
         }
+
+        // Phase 81.20.c — broker publish so subprocess plugins
+        // (no in-process emitter) can still drive the daemon's
+        // typing presence firehose. Single-source-of-truth: same
+        // event shape regardless of in-tree vs subprocess mode.
+        let topic = format!(
+            "plugin.lifecycle.whatsapp.{}.peer_typing",
+            if instance_label.is_empty() {
+                "default"
+            } else {
+                instance_label
+            }
+        );
+        let payload = serde_json::json!({
+            "kind": "peer_typing",
+            "channel": "whatsapp",
+            "account_id": instance_label,
+            "sender_id": jid,
+            "composing": composing,
+            "at_ms": now_ms,
+        });
+        let event = Event::new(&topic, SOURCE, payload);
+        let _ = broker.publish(&topic, event).await;
         return Ok(());
     }
     let mut out: Option<InboundEvent> = None;
