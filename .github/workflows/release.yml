@@ -75,9 +75,12 @@ jobs:
       - name: Install cargo-zigbuild
         run: cargo install cargo-zigbuild --locked --version 0.22.3
 
-      - name: cargo zigbuild --release
+      # Build with the rustls TLS stack (not the default `native-tls`),
+      # so the musl-static cross-builds don't need OpenSSL system
+      # headers. (`cargo install` users keep the OpenSSL default.)
+      - name: cargo zigbuild --release (rustls TLS)
         working-directory: nexo-rs-plugin-whatsapp
-        run: cargo zigbuild --release --target ${{ matrix.target }}
+        run: cargo zigbuild --release --no-default-features --features rustls-tls --target ${{ matrix.target }}
 
       - name: package (nexo plugin install layout)
         working-directory: nexo-rs-plugin-whatsapp
