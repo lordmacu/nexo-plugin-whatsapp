@@ -14,7 +14,7 @@
 
 [package]
 name        = "nexo-plugin-whatsapp"
-version     = "0.1.5"
+version     = "0.1.6"
 description = "WhatsApp bot plugin for Nexo agents (out-of-tree subprocess + embedded lib)."
 edition     = "2021"
 license     = "MIT OR Apache-2.0"
@@ -74,15 +74,11 @@ nexo-plugin-manifest = { version = "0.1.0",  path = "../proyecto/crates/plugin-m
 nexo-tool-meta       = { version = "0.1.0",  path = "../proyecto/crates/tool-meta" }
 
 # Upstream wa-agent — wraps Signal Protocol + QR pairing + Bot API.
-# Pinned to the same git rev the proyecto workspace patches in
-# (Phase 82.10.q + the c9ccec0 TLS feature split). Newer than
-# crates.io 0.1.1 — exposes the `ChatPresenceState`, `TypingMode`,
-# `RunAgentOpts`, `send_chat_presence`, `run_agent_with_opts` APIs
-# the plugin code calls + the `default = ["native-tls"]` /
-# `rustls-tls` feature gate the Phase 90 mobile build flips on.
-# Switching to a crates.io pin lands with the wider proyecto
-# crates publish wave (`81.18.c`).
-wa-agent = { git = "https://github.com/lordmacu/whatsapp-rs", rev = "c9ccec0", default-features = false }
+# Pinned to crates.io so this plugin is publishable + `cargo install`-able
+# standalone (no git deps). Needs the TLS feature split (`native-tls` /
+# `rustls-tls`) and the `ChatPresenceState` / `TypingMode` / `RunAgentOpts`
+# / `send_chat_presence` / `run_agent_with_opts` APIs — all in 0.1.6+.
+wa-agent = { version = "0.1.6", default-features = false }
 
 # Standard async + serde + crypto + media + tracing
 tokio              = { version = "1", features = ["rt-multi-thread", "macros", "sync", "io-util", "time", "process"] }
