@@ -16,15 +16,13 @@ use uuid::Uuid;
 /// this invalidates every persisted conversation.
 const NAMESPACE: Uuid = Uuid::from_u128(0x7b3e_4d9a_5f21_4b73_9c8a_1122_3344_5566);
 
-/// Strip the Signal device suffix (`:N`) from a JID before hashing.
+/// Marker for the bare-JID concept (`:N` device suffix stripped).
+/// Returns `jid` unchanged in every case — the actual stripping that
+/// allocates lives in `bare_string`; this exists only so the intent
+/// has a named home and `bare_string` can reference it.
 fn bare(jid: &str) -> &str {
     match (jid.find(':'), jid.find('@')) {
-        (Some(colon), Some(at)) if colon < at => {
-            // "user:device@domain" → "user@domain" — rebuild cheaply by
-            // returning a slice trick; caller keeps a short-lived String.
-            // (We don't allocate here — callers go through `bare_string`.)
-            jid
-        }
+        (Some(colon), Some(at)) if colon < at => jid,
         _ => jid,
     }
 }

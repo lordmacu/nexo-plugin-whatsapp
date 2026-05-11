@@ -53,7 +53,7 @@ pub type SharedLifecycle = Arc<Mutex<LifecycleState>>;
 /// translates interesting variants, publishes them to the broker, and
 /// keeps `state` current for `health()`.
 ///
-/// Phase 82.10.r — `event_emitter` + `instance_label` are threaded
+/// `event_emitter` + `instance_label` are threaded
 /// in so wa-agent's `MessageEvent::Typing` variant surfaces as
 /// `AgentEventKind::PeerTyping` via the boot firehose. Standalone
 /// embeds without admin-bootstrap pass `None` and the typing emit
@@ -113,9 +113,9 @@ async fn forward(
     instance_label: &str,
     ev: whatsapp_rs::MessageEvent,
 ) -> Result<()> {
-    // Phase 82.10.r — handle Typing presence outside the lifecycle
-    // state-machine block since it doesn't mutate connect/disconnect
-    // state and skips the broker `InboundEvent` emit.
+    // Typing presence is handled outside the lifecycle state-machine
+    // block below since it doesn't mutate connect/disconnect state and
+    // skips the broker `InboundEvent` emit.
     // Passive monitor — log every NewMessage that hits the session,
     // including chats the agent's ACL would otherwise filter out
     // (Meta AI replies, third-party bots, archived contacts). Pure
@@ -198,10 +198,9 @@ async fn forward(
             .map(|d| d.as_millis() as u64)
             .unwrap_or(0);
 
-        // Phase 82.10.r — in-process emitter path. Used when the
-        // plugin runs inside the daemon (legacy embedded path
-        // before 81.18.b.2). After the subprocess flip the
-        // emitter is `None`; the broker publish below covers the
+        // In-process emitter path. Used when the plugin runs inside
+        // the daemon (legacy embedded path). After the subprocess flip
+        // the emitter is `None`; the broker publish below covers the
         // subprocess path so daemon-side subscribers
         // (`spawn_whatsapp_typing_presence_subscriber`) still
         // surface `AgentEventKind::PeerTyping` on the live SSE
@@ -219,7 +218,7 @@ async fn forward(
             emitter.emit(evt).await;
         }
 
-        // Phase 81.20.c — broker publish so subprocess plugins
+        // Broker publish so subprocess plugins
         // (no in-process emitter) can still drive the daemon's
         // typing presence firehose. Single-source-of-truth: same
         // event shape regardless of in-tree vs subprocess mode.

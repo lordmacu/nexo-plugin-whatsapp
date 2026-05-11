@@ -1,13 +1,8 @@
-//! Phase 81.19.a — env-var → `WhatsappPluginConfig` reader.
+//! env-var → `WhatsappPluginConfig` reader.
 //!
 //! The daemon seeds these vars before spawning the subprocess; the
 //! plugin never reads YAML directly. Mirrors the
 //! `telegram_config_from_env` shape used by `nexo-plugin-telegram`.
-//!
-//! Today (81.19.a) the daemon imports the lib via path-dep and
-//! constructs `WhatsappPlugin::new(cfg)` from the YAML loader, so
-//! this helper is forward-looking infra for the deferred
-//! subprocess flip (`81.18.b`).
 
 use anyhow::{Context, Result};
 

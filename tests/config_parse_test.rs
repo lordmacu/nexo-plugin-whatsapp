@@ -32,9 +32,9 @@ fn minimal_yaml_parses_with_defaults() {
 
 #[test]
 fn shipped_example_yaml_parses() {
-    // Phase 81.19.a — repo lives at `../proyecto/`-sibling layout.
-    // Resolves to `proyecto/config/plugins/whatsapp.yaml` while
-    // keeping the test self-describing for out-of-tree contributors.
+    // Repo lives at `../proyecto/`-sibling layout. Resolves to
+    // `proyecto/config/plugins/whatsapp.yaml` while keeping the test
+    // self-describing for out-of-tree contributors.
     let raw = include_str!("../../proyecto/config/plugins/whatsapp.yaml");
     let cfg = load_yaml(raw);
     // Shipped yaml has `enabled: true` — this plugin is the user's

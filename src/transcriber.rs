@@ -3,7 +3,7 @@
 //! `wa-agent`'s `run_agent_with_transcribe` accepts any value that
 //! implements [`whatsapp_rs::agent::Transcriber`]. We implement it by
 //! round-tripping through the broker — the agent framework already
-//! carries Skills (Phase 13.6 whisper, etc.) on topics of the form
+//! carries Skills (whisper, etc.) on topics of the form
 //! `skill.<id>.transcribe`, so our job is just to serialise the audio
 //! bytes + mimetype, publish, and relay the reply back into `ctx.text`.
 //!

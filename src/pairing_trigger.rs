@@ -1,4 +1,4 @@
-//! Phase 82.10.p — `WhatsappPairingTrigger` impl.
+//! `WhatsappPairingTrigger` impl.
 //!
 //! Bridges admin RPC `pairing/start` to the WhatsApp channel
 //! plugin: spawns `wa-agent` in pairing mode (via

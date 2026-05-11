@@ -1,14 +1,8 @@
 //! `WhatsappPlugin` — implementation of the core `Plugin` trait.
 //!
-//! Phases wired as of 6.3:
-//!   - 6.2 boot checks + directory layout (pre-flight in `start`)
-//!   - 6.3 inbound bridge: `Session::run_agent_with` + `bridge::build_handler`
-//!
-//! Pending:
-//!   - 6.4 outbound dispatcher (reactive oneshot resolve + proactive send)
-//!   - 6.5 media
-//!   - 6.6 lifecycle/health events
-//!   - 6.7 transcriber
+//! Wires boot checks + directory layout, the inbound bridge
+//! (`Session::run_agent_with` + `bridge::build_handler`), the outbound
+//! dispatcher, media, lifecycle/health events, and the transcriber.
 
 use std::sync::Arc;
 
@@ -32,7 +26,7 @@ use crate::pairing::{PairingState, SharedPairingState};
 /// Map of session ids → oneshot senders waiting for an outbound reply.
 ///
 /// Shared between the inbound bridge (which inserts) and the outbound
-/// dispatcher (Phase 6.4, which resolves). The dispatcher also falls
+/// dispatcher (which resolves). The dispatcher also falls
 /// back to direct `Session::send_text` when no sender matches — that's
 /// how proactive Heartbeat / A2A outputs reach the user.
 pub(crate) type PendingMap = Arc<DashMap<Uuid, oneshot::Sender<String>>>;
@@ -45,7 +39,7 @@ pub struct WhatsappPlugin {
     /// `PluginRegistry` keys on this string — multi-account setups need
     /// distinct names or the second registration overwrites the first.
     registry_name: String,
-    /// Phase 81.12.c — compile-time-bundled plugin manifest. Parsed
+    /// Compile-time-bundled plugin manifest. Parsed
     /// once in `new()` from `../nexo-plugin.toml` via `include_str!`.
     /// `manifest().plugin.id` stays `"whatsapp"` for every instance —
     /// the per-instance label lives in `registry_name`, not the manifest.
@@ -60,7 +54,7 @@ pub struct WhatsappPlugin {
     /// Background loops (inbound, dispatch, lifecycle) registered at
     /// `start()` so `stop()` can join them instead of racing shutdown.
     spawned: Mutex<Vec<tokio::task::JoinHandle<()>>>,
-    /// Phase 82.10.r — agent-event emitter handed in from boot.
+    /// Agent-event emitter handed in from boot.
     /// `Some` when the daemon's `AdminBootstrap` is wired and we
     /// should forward `MessageEvent::Typing` from wa-agent to the
     /// firehose as `AgentEventKind::PeerTyping`. `None` keeps the
@@ -69,7 +63,7 @@ pub struct WhatsappPlugin {
     event_emitter: Arc<OnceCell<Arc<dyn nexo_core::agent::agent_events::AgentEventEmitter>>>,
 }
 
-/// Phase 81.12.c — bundled NexoPlugin manifest. `expect()` is OK here:
+/// Bundled NexoPlugin manifest. `expect()` is OK here:
 /// the file ships in this crate and is checked at compile time by
 /// `include_str!`, so a parse failure means the workspace itself is
 /// broken — fail-fast at boot beats a deferred "manifest missing" surprise.
@@ -99,7 +93,7 @@ impl WhatsappPlugin {
         }
     }
 
-    /// Phase 82.10.r — install the boot-side firehose emitter so the
+    /// Install the boot-side firehose emitter so the
     /// plugin's lifecycle loop can forward wa-agent typing presence
     /// events as `AgentEventKind::PeerTyping`. Must be called BEFORE
     /// `start`. Idempotent — second call is a no-op.
@@ -118,7 +112,7 @@ impl WhatsappPlugin {
     }
 
     /// Snapshot plugin health — safe to call at any time, including
-    /// before `start`. Integrates with core `/health` (Phase 9.3) via
+    /// before `start`. Integrates with core `/health` via
     /// the plugin registry lookup.
     pub async fn health(&self) -> PluginHealth {
         let session = self.session.get().cloned();
@@ -256,8 +250,7 @@ impl Plugin for WhatsappPlugin {
                     // wa-agent's `run_agent_with_transcribe` does not
                     // accept opts yet — using legacy entry point so
                     // the transcribe path keeps the default
-                    // `Instant` mode. Tracking as follow-up
-                    // `wa-agent-run-agent-with-transcribe-and-opts`.
+                    // `Instant` mode.
                     let _ = run_opts;
                     session_for_task
                         .run_agent_with_transcribe(acl, t, handler)
@@ -304,7 +297,7 @@ impl Plugin for WhatsappPlugin {
             self.pairing.clone(),
             self.shutdown.clone(),
             inbound_topic,
-            // Phase 82.10.r — pass the optional firehose emitter so
+            // Pass the optional firehose emitter so
             // wa-agent typing-presence events surface as
             // `AgentEventKind::PeerTyping`. None keeps the standalone
             // / test path intact.
@@ -357,10 +350,9 @@ impl Plugin for WhatsappPlugin {
     }
 }
 
-/// Phase 81.12.c — dual-trait wrapper. Until Phase 81.12.e flips the
-/// boot path in `src/main.rs`, the legacy `Plugin` impl above is the
-/// one actually invoked at runtime; this `NexoPlugin` impl exists so a
-/// future `factory_registry.register("whatsapp", whatsapp_plugin_factory(cfg))`
+/// Dual-trait wrapper. The subprocess entrypoint in `src/main.rs`
+/// drives the legacy `Plugin` impl above; this `NexoPlugin` impl exists
+/// so a `factory_registry.register("whatsapp", whatsapp_plugin_factory(cfg))`
 /// callsite can drive the same plugin through `wire_plugin_registry`
 /// without touching the per-instance fields.
 ///

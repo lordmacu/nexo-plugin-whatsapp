@@ -1,14 +1,11 @@
-//! Phase 81.19.a — subprocess `tool.invoke` dispatcher.
+//! Subprocess `tool.invoke` dispatcher.
 //!
 //! Maps the 4 tool names declared by [`whatsapp_tool_defs`] to
-//! [`WhatsappPlugin::send_command`] calls. The legacy in-tree
-//! handlers in [`tool`] publish to the broker via
-//! `publish_outbound`; the subprocess path uses the same plugin
-//! API — `send_command` itself publishes to the broker which the
-//! plugin's own dispatcher consumes — so the wire surface is
-//! byte-equivalent. The benefit is shape: one dispatch path
-//! shared by both the legacy in-tree daemon and the future
-//! subprocess (`81.18.b`).
+//! [`WhatsappPlugin::send_command`] calls. The in-tree handlers in
+//! [`tool`] publish to the broker via `publish_outbound`; the
+//! subprocess path uses the same plugin API — `send_command` itself
+//! publishes to the broker which the plugin's own dispatcher
+//! consumes — so the wire surface is byte-equivalent.
 //!
 //! [`tool`]: crate::tool
 
