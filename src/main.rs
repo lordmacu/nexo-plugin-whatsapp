@@ -1,4 +1,4 @@
-//! Subprocess entrypoint for `nexo-plugin-whatsapp` (Phase 81.19.a).
+//! Subprocess entrypoint for `nexo-plugin-whatsapp`.
 //!
 //! Wires:
 //!   - [`PluginAdapter`] — child-side JSON-RPC dispatch loop.
@@ -10,8 +10,7 @@
 //!     `tool.invoke` from the daemon-supplied env vars.
 //!
 //! Configuration flows from the daemon via env vars set by
-//! `proyecto/src/main.rs::seed_whatsapp_subprocess_env` (deferred
-//! `81.18.b`):
+//! `proyecto/src/main.rs::seed_whatsapp_subprocess_env`:
 //!   * `NEXO_PLUGIN_WHATSAPP_INSTANCE`         (optional)
 //!   * `NEXO_PLUGIN_WHATSAPP_SESSION_DIR`
 //!   * `NEXO_PLUGIN_WHATSAPP_MEDIA_DIR`
@@ -19,9 +18,9 @@
 //!   * `NEXO_PLUGIN_WHATSAPP_ALLOWLIST`         (JSON array, optional)
 //!   * `NEXO_PLUGIN_WHATSAPP_TRANSCRIBE_ENABLED` (default false)
 //!   * `NEXO_PLUGIN_WHATSAPP_WHISPER_TIMEOUT_MS` (default 60000)
-//!   * `NEXO_BROKER_KIND`  (Phase 92 — `nats` or `stdio_bridge`;
-//!                          defaults to `nats` for backwards compat
-//!                          with daemons that pre-date the env stamp)
+//!   * `NEXO_BROKER_KIND`  (`nats` or `stdio_bridge`; defaults to
+//!                          `nats` for backwards compat with daemons
+//!                          that pre-date the env stamp)
 //!   * `NEXO_BROKER_URL`  (required when KIND=nats; ignored
 //!                          when KIND=stdio_bridge — the transport
 //!                          is the parent process's stdin/stdout)
@@ -39,7 +38,7 @@ use tokio::sync::OnceCell;
 
 const MANIFEST: &str = include_str!("../nexo-plugin.toml");
 
-/// Phase 92 — populated in `main()` when the daemon stamps
+/// Populated in `main()` when the daemon stamps
 /// `NEXO_BROKER_KIND=stdio_bridge`. The bridge holds the outbound
 /// mpsc Sender wired into the PluginAdapter's drain task and the
 /// inbound subscriber fanout. `shared_plugin()` clones from this
@@ -52,7 +51,7 @@ static BRIDGE: Lazy<OnceCell<Arc<StdioBridgeBroker>>> = Lazy::new(OnceCell::new)
 /// retries broker / Signal Protocol outages on its own cadence.
 static PLUGIN: Lazy<OnceCell<Arc<WhatsappPlugin>>> = Lazy::new(OnceCell::new);
 
-/// Phase 92 — construct the broker the plugin uses for
+/// Construct the broker the plugin uses for
 /// publish/subscribe. Branches on `NEXO_BROKER_KIND`:
 ///
 /// - `stdio_bridge` (or empty default → fall back to nats for
@@ -143,7 +142,7 @@ async fn main() -> anyhow::Result<()> {
     // before `ClientConfig::builder()` can return successfully.
     // Same dance as the proyecto daemon (see proyecto/src/main.rs).
     // wa-agent itself uses native-tls (OpenSSL); the dual stack is
-    // a known wart tracked under `81.19.a.tls-rustls`.
+    // a known wart.
     let _ = rustls::crypto::ring::default_provider().install_default();
 
     let adapter = PluginAdapter::new(MANIFEST)?
@@ -153,7 +152,7 @@ async fn main() -> anyhow::Result<()> {
             dispatch_whatsapp_tool(plugin.as_ref(), invocation).await
         });
 
-    // Phase 92 — when the daemon stamps
+    // When the daemon stamps
     // `NEXO_BROKER_KIND=stdio_bridge`, wire the adapter's outbound
     // drain + on_broker_event handler to a fresh StdioBridgeBroker
     // and stash it in the `BRIDGE` OnceCell so `build_broker()`

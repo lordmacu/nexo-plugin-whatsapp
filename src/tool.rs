@@ -82,7 +82,7 @@ fn warn_once_unrestricted(agent_id: &str) {
 }
 
 async fn publish_outbound(ctx: &AgentContext, payload: Value) -> anyhow::Result<()> {
-    // Phase 17 — resolve the target WhatsApp instance from the agent's
+    // Resolve the target WhatsApp instance from the agent's
     // credential binding. Falls back to the legacy single-topic
     // `plugin.outbound.whatsapp` when no resolver is attached (early
     // boot paths, tests) or when the agent has no `credentials.whatsapp`

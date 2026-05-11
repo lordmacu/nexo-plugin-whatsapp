@@ -12,20 +12,20 @@ use nexo_config::WhatsappPluginConfig;
 
 use crate::pairing::SharedPairingState;
 
-/// Phase 82.10.p — outcome returned by `pair_with_callback`.
+/// Outcome returned by `pair_with_callback`.
 /// Today carries no fields beyond the success signal; future
 /// channels may extend with `device_jid` etc. once wa-agent
 /// surfaces them post-connect.
 #[derive(Debug, Default, Clone)]
 pub struct PairingOutcome {}
 
-/// Phase 82.10.p — one-shot pairing helper that surfaces every
+/// One-shot pairing helper that surfaces every
 /// QR rotation through `on_qr` callback. Used by:
 ///
 /// - **Setup CLI** (`agent setup whatsapp`): passes a closure
 ///   that renders the QR to stdout (terminal scan). Wrapped
 ///   by [`pair_once`] for backwards compat.
-/// - **Admin RPC pairing trigger** (Phase 82.10.p Step 5):
+/// - **Admin RPC pairing trigger**:
 ///   passes a closure that pushes
 ///   `(qr_png_base64, qr_ascii, expires_at_ms)` into the
 ///   challenge store + the SSE notifier so the operator UI
@@ -97,7 +97,7 @@ where
 /// persists to `<session_dir>/.whatsapp-rs/` so later boots of the
 /// main agent resume silently.
 ///
-/// Phase 82.10.p — now a thin wrapper over [`pair_with_callback`]
+/// Now a thin wrapper over [`pair_with_callback`]
 /// that prints the QR to stdout. New callers (admin RPC trigger,
 /// future channel UIs) should use `pair_with_callback` directly
 /// so they can route QR data wherever they need it.
@@ -225,8 +225,7 @@ pub async fn connect_session(
 
 /// Render the pairing payload as a base64-encoded PNG for UIs.
 /// Fails soft — returns an empty string when rendering fails so
-/// the ascii QR is still usable. Phase 82.10.p — promoted from
-/// test-only to production: `pair_with_callback` invokes it on
+/// the ascii QR is still usable. `pair_with_callback` invokes it on
 /// every QR rotation so admin RPC pairing can stream PNG data
 /// to the operator UI.
 fn render_qr_png(payload: &str) -> String {

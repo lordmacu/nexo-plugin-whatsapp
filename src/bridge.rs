@@ -6,8 +6,7 @@
 //! to a deterministic UUIDv5 derived from the remote JID. Core's agent
 //! runtime already debounces by `session_id` and replies on
 //! `plugin.outbound.whatsapp` carrying the same `session_id`, which
-//! the outbound dispatcher (Phase 6.4) routes back through the
-//! [`PendingMap`].
+//! the outbound dispatcher routes back through the [`PendingMap`].
 
 use std::sync::Arc;
 use std::time::Duration;
@@ -125,8 +124,8 @@ pub fn build_handler(
             if cfg.behavior.ignore_groups && ctx.msg.key.remote_jid.ends_with("@g.us") {
                 return Response::Noop;
             }
-            // Phase 82.10.q.b — drop offline backlog older than the
-            // configured threshold. WhatsApp Multi-Device re-delivers
+            // Drop offline backlog older than the configured
+            // threshold. WhatsApp Multi-Device re-delivers
             // buffered messages on every reconnect even after we ACK
             // them; without this gate the agent replies to the same
             // stale backlog after every daemon restart. The check is

@@ -2,13 +2,13 @@
 //! `wa-agent` crate (a.k.a. `whatsapp_rs` on the imports side).
 //!
 //! See `proyecto/docs/wa-agent-integration.md` for the integration
-//! ADR. Extracted out-of-tree per Phase 81.19.a so a future embedded
-//! build (Phase 90 — Android) can drop the subprocess loop and re-
-//! use `WhatsappPlugin` in-process via the lib re-exports below.
+//! ADR. Extracted out-of-tree so a future embedded build (Android)
+//! can drop the subprocess loop and re-use `WhatsappPlugin`
+//! in-process via the lib re-exports below.
 //!
-//! ## Two consumers (Shape B)
+//! ## Two consumers
 //!
-//! 1. **Subprocess (default once 81.18.b lands)** — `src/main.rs`
+//! 1. **Subprocess (default)** — `src/main.rs`
 //!    wraps [`WhatsappPlugin`] in
 //!    [`nexo_microapp_sdk::plugin::PluginAdapter`] and runs the
 //!    JSON-RPC dispatch loop over stdio. The daemon spawns one
@@ -16,12 +16,11 @@
 //!    env vars; per-instance Signal Protocol state is fully owned
 //!    by the subprocess, no cross-process coordination.
 //!
-//! 2. **Embedded / in-process (today's daemon path + future
-//!    Phase 90 mobile)** — a host process imports the lib
-//!    directly and instantiates [`WhatsappPlugin`] in-process via
-//!    [`whatsapp_plugin_factory`] or `WhatsappPlugin::new(cfg)`.
-//!    The `embedded` cargo feature drops subprocess code paths so
-//!    the resulting binary stays lean.
+//! 2. **Embedded / in-process (future mobile)** — a host process
+//!    imports the lib directly and instantiates [`WhatsappPlugin`]
+//!    in-process via [`whatsapp_plugin_factory`] or
+//!    `WhatsappPlugin::new(cfg)`. The `embedded` cargo feature drops
+//!    subprocess code paths so the resulting binary stays lean.
 
 pub mod bot_registry;
 pub mod bridge;
@@ -66,9 +65,8 @@ use nexo_core::agent::plugin_host::NexoPlugin;
 /// `wire_plugin_registry(..., Some(&factory))` instantiates them
 /// on boot.
 ///
-/// Subprocess consumers (the daemon's deferred 81.18.b path)
-/// construct [`WhatsappPlugin`] directly inside `main.rs` from
-/// env-derived config and never touch this helper.
+/// Subprocess consumers construct [`WhatsappPlugin`] directly inside
+/// `main.rs` from env-derived config and never touch this helper.
 pub fn whatsapp_plugin_factory(cfg: WhatsappPluginConfig) -> PluginFactory {
     Box::new(move |_manifest| {
         let plugin: Arc<dyn NexoPlugin> = Arc::new(WhatsappPlugin::new(cfg.clone()));
