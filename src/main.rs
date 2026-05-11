@@ -121,6 +121,24 @@ async fn main() -> anyhow::Result<()> {
             dispatch_whatsapp_tool(plugin.as_ref(), invocation).await
         });
 
+    // Eagerly boot the plugin so the inbound bridge connects to
+    // WhatsApp BEFORE the first `tool.invoke`. Without this the
+    // subprocess sits idle on stdio after handshake — no Signal
+    // session, no broker subscription, no inbound deliveries to
+    // the daemon. The lazy-OnceCell path inside `shared_plugin`
+    // still covers `tool.invoke` re-entries (no duplicate boot).
+    // Boot failures here are logged but NOT fatal: the plugin
+    // host's supervisor expects `run_stdio` to keep serving the
+    // initialize handshake; a transient outage at startup should
+    // not crash the process and trigger a respawn loop.
+    if let Err(e) = shared_plugin().await {
+        tracing::warn!(
+            target = "nexo_plugin_whatsapp",
+            error = %e,
+            "eager start failed; falling back to lazy start on first tool.invoke"
+        );
+    }
+
     adapter.run_stdio().await?;
     Ok(())
 }
