@@ -8,7 +8,7 @@
 
 [plugin]
 id              = "whatsapp"
-version         = "0.1.3"
+version         = "0.1.4"
 name            = "WhatsApp Bot"
 description     = "WhatsApp channel plugin via wa-agent (Signal Protocol + Bot API + QR pairing)."
 min_nexo_version = ">=0.1.0"
