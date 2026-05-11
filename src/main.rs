@@ -19,11 +19,16 @@
 //!   * `NEXO_PLUGIN_WHATSAPP_ALLOWLIST`         (JSON array, optional)
 //!   * `NEXO_PLUGIN_WHATSAPP_TRANSCRIBE_ENABLED` (default false)
 //!   * `NEXO_PLUGIN_WHATSAPP_WHISPER_TIMEOUT_MS` (default 60000)
-//!   * `NEXO_BROKER_URL`
+//!   * `NEXO_BROKER_KIND`  (Phase 92 — `nats` or `stdio_bridge`;
+//!                          defaults to `nats` for backwards compat
+//!                          with daemons that pre-date the env stamp)
+//!   * `NEXO_BROKER_URL`  (required when KIND=nats; ignored
+//!                          when KIND=stdio_bridge — the transport
+//!                          is the parent process's stdin/stdout)
 
 use std::sync::Arc;
 
-use nexo_broker::AnyBroker;
+use nexo_broker::{AnyBroker, StdioBridgeBroker};
 use nexo_core::agent::plugin::Plugin;
 use nexo_microapp_sdk::plugin::{PluginAdapter, ToolInvocation, ToolInvocationError};
 use nexo_plugin_whatsapp::{
@@ -34,11 +39,64 @@ use tokio::sync::OnceCell;
 
 const MANIFEST: &str = include_str!("../nexo-plugin.toml");
 
+/// Phase 92 — populated in `main()` when the daemon stamps
+/// `NEXO_BROKER_KIND=stdio_bridge`. The bridge holds the outbound
+/// mpsc Sender wired into the PluginAdapter's drain task and the
+/// inbound subscriber fanout. `shared_plugin()` clones from this
+/// OnceCell when building the broker for the stdio_bridge path.
+static BRIDGE: Lazy<OnceCell<Arc<StdioBridgeBroker>>> = Lazy::new(OnceCell::new);
+
 /// Process-wide [`WhatsappPlugin`]. Boot is gated behind the first
 /// `tool.invoke` so the JSON-RPC `initialize` handshake can complete
 /// even when the broker is unreachable at startup. Daemon supervisor
 /// retries broker / Signal Protocol outages on its own cadence.
 static PLUGIN: Lazy<OnceCell<Arc<WhatsappPlugin>>> = Lazy::new(OnceCell::new);
+
+/// Phase 92 — construct the broker the plugin uses for
+/// publish/subscribe. Branches on `NEXO_BROKER_KIND`:
+///
+/// - `stdio_bridge` (or empty default → fall back to nats for
+///   backwards compatibility): use the `StdioBridgeBroker` placed
+///   into [`BRIDGE`] by `main()`. Pre-92 daemons that don't
+///   stamp `NEXO_BROKER_KIND` keep working through the nats
+///   fallback path below.
+/// - `nats` (or unset): connect to the seeded `NEXO_BROKER_URL`.
+async fn build_broker() -> Result<AnyBroker, ToolInvocationError> {
+    let kind = std::env::var("NEXO_BROKER_KIND").unwrap_or_else(|_| "nats".to_string());
+    if kind == "stdio_bridge" {
+        let bridge = BRIDGE.get().ok_or_else(|| {
+            ToolInvocationError::Unavailable(
+                "stdio_bridge mode: BRIDGE not initialized — main() must call \
+                 PluginAdapter::with_stdio_bridge_broker before tool.invoke"
+                    .into(),
+            )
+        })?;
+        return Ok(AnyBroker::stdio_bridge((**bridge).clone()));
+    }
+    // Default + explicit `nats` path: connect to the broker URL
+    // the daemon seeded. Pre-92 daemons that don't set
+    // `NEXO_BROKER_KIND` land here too (legacy compat).
+    let broker_url = std::env::var("NEXO_BROKER_URL").map_err(|_| {
+        ToolInvocationError::Unavailable(
+            "NEXO_BROKER_URL not set — daemon must seed it before tool.invoke".into(),
+        )
+    })?;
+    let broker_inner = nexo_config::types::broker::BrokerInner {
+        kind: if broker_url.starts_with("nats://") {
+            nexo_config::types::broker::BrokerKind::Nats
+        } else {
+            nexo_config::types::broker::BrokerKind::Local
+        },
+        url: broker_url,
+        auth: nexo_config::types::broker::BrokerAuthConfig::default(),
+        persistence: nexo_config::types::broker::BrokerPersistenceConfig::default(),
+        limits: nexo_config::types::broker::BrokerLimitsConfig::default(),
+        fallback: nexo_config::types::broker::BrokerFallbackConfig::default(),
+    };
+    AnyBroker::from_config(&broker_inner)
+        .await
+        .map_err(|e| ToolInvocationError::Unavailable(format!("broker connect failed: {e}")))
+}
 
 async fn shared_plugin() -> Result<Arc<WhatsappPlugin>, ToolInvocationError> {
     PLUGIN
@@ -46,33 +104,7 @@ async fn shared_plugin() -> Result<Arc<WhatsappPlugin>, ToolInvocationError> {
             let cfg = whatsapp_config_from_env()
                 .map_err(|e| ToolInvocationError::ArgumentInvalid(format!("env config: {e}")))?;
 
-            let broker_url = std::env::var("NEXO_BROKER_URL").map_err(|_| {
-                ToolInvocationError::Unavailable(
-                    "NEXO_BROKER_URL not set — daemon must seed it before tool.invoke".into(),
-                )
-            })?;
-
-            // Build a `BrokerInner` from the seeded URL. Auth /
-            // persistence / limits / fallback all default — the
-            // daemon already chose those for the parent process and
-            // the subprocess just needs the connection URL to reach
-            // the same NATS server.
-            let broker_inner = nexo_config::types::broker::BrokerInner {
-                kind: if broker_url.starts_with("nats://") {
-                    nexo_config::types::broker::BrokerKind::Nats
-                } else {
-                    nexo_config::types::broker::BrokerKind::Local
-                },
-                url: broker_url,
-                auth: nexo_config::types::broker::BrokerAuthConfig::default(),
-                persistence: nexo_config::types::broker::BrokerPersistenceConfig::default(),
-                limits: nexo_config::types::broker::BrokerLimitsConfig::default(),
-                fallback: nexo_config::types::broker::BrokerFallbackConfig::default(),
-            };
-
-            let broker = AnyBroker::from_config(&broker_inner).await.map_err(|e| {
-                ToolInvocationError::Unavailable(format!("broker connect failed: {e}"))
-            })?;
+            let broker = build_broker().await?;
 
             let plugin = Arc::new(WhatsappPlugin::new(cfg));
 
@@ -120,6 +152,27 @@ async fn main() -> anyhow::Result<()> {
             let plugin = shared_plugin().await?;
             dispatch_whatsapp_tool(plugin.as_ref(), invocation).await
         });
+
+    // Phase 92 — when the daemon stamps
+    // `NEXO_BROKER_KIND=stdio_bridge`, wire the adapter's outbound
+    // drain + on_broker_event handler to a fresh StdioBridgeBroker
+    // and stash it in the `BRIDGE` OnceCell so `build_broker()`
+    // hands it out to `shared_plugin()` instead of constructing a
+    // NATS connection. The bridge piggybacks on the adapter's
+    // stdout writer; net: zero network broker dependency.
+    let adapter = if std::env::var("NEXO_BROKER_KIND").as_deref() == Ok("stdio_bridge") {
+        let (adapter, bridge) = adapter.with_stdio_bridge_broker();
+        BRIDGE
+            .set(bridge)
+            .map_err(|_| anyhow::anyhow!("BRIDGE already initialized (this should not happen)"))?;
+        tracing::info!(
+            target = "nexo_plugin_whatsapp",
+            "stdio_bridge broker wired (daemon broker = Local)"
+        );
+        adapter
+    } else {
+        adapter
+    };
 
     // Eagerly boot the plugin so the inbound bridge connects to
     // WhatsApp BEFORE the first `tool.invoke`. Without this the
