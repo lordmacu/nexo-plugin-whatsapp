@@ -14,7 +14,7 @@
 
 [package]
 name        = "nexo-plugin-whatsapp"
-version     = "0.1.7"
+version     = "0.1.8"
 description = "WhatsApp bot plugin for Nexo agents (out-of-tree subprocess + embedded lib)."
 edition     = "2021"
 license     = "MIT OR Apache-2.0"

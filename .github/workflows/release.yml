@@ -1,14 +1,14 @@
-# Tag push (`v0.1.5`, `v0.1.6`, …) builds release binaries for every
-# target the `nexo-rs` daemon ships for and creates a GitHub Release
-# in the layout `nexo plugin install` expects:
+# Tag push (`v0.1.8`, …) builds release binaries for every target the
+# `nexo-rs` daemon ships for and creates a GitHub Release in the layout
+# `nexo plugin install` expects:
 #   * bare `nexo-plugin.toml` at release root
 #   * `<plugin_id>-<version>-<target>.tar.gz` containing
 #     `nexo-plugin.toml` + `bin/<plugin_id>` at archive root
 #   * `<...>.tar.gz.sha256` sidecar with the hex digest
 #
-# Targets: x86_64/aarch64 musl static (via cargo-zigbuild, matching
-# `nexo-rs`'s own release) + x86_64/aarch64 macOS. Operators run
-# `nexo plugin install lordmacu/nexo-plugin-whatsapp`.
+# Targets: x86_64/aarch64 musl static + x86_64/aarch64 macOS (via
+# cargo-zigbuild) + x86_64 Windows MSVC (native build on windows-latest).
+# Operators run `nexo plugin install lordmacu/nexo-plugin-whatsapp`.
 
 name: release
 
@@ -33,6 +33,8 @@ jobs:
             target: x86_64-apple-darwin
           - os: macos-14
             target: aarch64-apple-darwin
+          - os: windows-latest
+            target: x86_64-pc-windows-msvc
     steps:
       - name: Checkout plugin
         uses: actions/checkout@v4
@@ -68,27 +70,38 @@ jobs:
           echo "CFLAGS_x86_64_unknown_linux_musl=${MUSL_CFLAGS}"  >> "$GITHUB_ENV"
           echo "CFLAGS_aarch64_unknown_linux_musl=${MUSL_CFLAGS}" >> "$GITHUB_ENV"
 
+      # zig + cargo-zigbuild only for the Unix targets (Windows builds
+      # natively on the windows-latest runner with the MSVC toolchain).
       - name: Install zig (pinned)
+        if: ${{ !contains(matrix.target, 'windows') }}
         uses: goto-bus-stop/setup-zig@v2
         with:
           version: "0.13.0"
       - name: Install cargo-zigbuild
+        if: ${{ !contains(matrix.target, 'windows') }}
         run: cargo install cargo-zigbuild --locked --version 0.22.3
 
-      # Build with the rustls TLS stack (not the default `native-tls`),
-      # so the musl-static cross-builds don't need OpenSSL system
-      # headers. (`cargo install` users keep the OpenSSL default.)
-      - name: cargo zigbuild --release (rustls TLS)
+      # Build with the rustls TLS stack (not the default `native-tls`)
+      # so the musl-static cross-builds don't need OpenSSL system headers.
+      - name: Build (Unix — cargo-zigbuild, rustls TLS)
+        if: ${{ !contains(matrix.target, 'windows') }}
         working-directory: nexo-rs-plugin-whatsapp
         run: cargo zigbuild --release --no-default-features --features rustls-tls --target ${{ matrix.target }}
+      - name: Build (Windows — native cargo, rustls TLS)
+        if: contains(matrix.target, 'windows')
+        working-directory: nexo-rs-plugin-whatsapp
+        run: cargo build --release --no-default-features --features rustls-tls --target ${{ matrix.target }}
 
       - name: package (nexo plugin install layout)
         working-directory: nexo-rs-plugin-whatsapp
+        shell: bash
         run: |
           set -euo pipefail
           mkdir -p dist/staging/bin
-          cp "target/${{ matrix.target }}/release/nexo-plugin-whatsapp" \
-             dist/staging/bin/whatsapp
+          BIN="target/${{ matrix.target }}/release/nexo-plugin-whatsapp"
+          [ -f "${BIN}.exe" ] && BIN="${BIN}.exe"
+          # Extractor expects `bin/<plugin_id>` (no extension on any OS).
+          cp "$BIN" dist/staging/bin/whatsapp
           cp nexo-plugin.toml dist/staging/nexo-plugin.toml
 
           PLUGIN_ID=$(grep -E '^id[[:space:]]*=' nexo-plugin.toml | head -1 | sed -E 's/.*"([^"]+)".*/\1/')
