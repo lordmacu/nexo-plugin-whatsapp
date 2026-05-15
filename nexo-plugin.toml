@@ -8,7 +8,7 @@
 
 [plugin]
 id              = "whatsapp"
-version         = "0.1.8"
+version         = "0.2.0"
 name            = "WhatsApp Bot"
 description     = "WhatsApp channel plugin via wa-agent (Signal Protocol + Bot API + QR pairing)."
 min_nexo_version = ">=0.1.0"
@@ -35,3 +35,75 @@ label = "WhatsApp"
 [plugin.pairing.instructions]
 es = "Abrí WhatsApp en tu teléfono → Configuración → Dispositivos vinculados → Vincular un dispositivo, y escaneá el código QR."
 en = "Open WhatsApp on your phone → Settings → Linked Devices → Link a device, and scan the QR code."
+
+# Phase 93.4.b — declarative config contract. Daemon delivers
+# operator YAML at `cfg.plugins.entries.whatsapp` (Phase 93.3) via
+# `plugin.configure` JSON-RPC (Phase 93.2); SDK `on_configure`
+# handler deserialises into `Vec<WhatsappPluginConfig>`.
+[plugin.config_schema]
+shape = "array"
+schema = '''{
+  "type": "object",
+  "properties": {
+    "enabled":           { "type": "boolean" },
+    "session_dir":       { "type": "string" },
+    "media_dir":         { "type": "string" },
+    "credentials_file":  { "type": "string" },
+    "instance":          { "type": "string" },
+    "allow_agents":      { "type": "array" },
+    "typing_mode":       { "type": "string" },
+    "acl": {
+      "type": "object",
+      "properties": {
+        "allow_list": { "type": "array" },
+        "from_env":   { "type": "string" }
+      }
+    },
+    "behavior": {
+      "type": "object",
+      "properties": {
+        "ignore_chat_meta":      { "type": "boolean" },
+        "ignore_from_me":        { "type": "boolean" },
+        "ignore_groups":         { "type": "boolean" },
+        "skip_backlog_age_secs": { "type": "integer" }
+      }
+    },
+    "rate_limit": {
+      "type": "object",
+      "properties": {
+        "global_per_sec":  { "type": "number" },
+        "per_jid_per_sec": { "type": "number" },
+        "burst":           { "type": "integer" }
+      }
+    },
+    "bridge": {
+      "type": "object",
+      "properties": {
+        "response_timeout_ms": { "type": "integer" },
+        "on_timeout":          { "type": "string" },
+        "apology_text":        { "type": "string" }
+      }
+    },
+    "transcriber": {
+      "type": "object",
+      "properties": {
+        "enabled":    { "type": "boolean" },
+        "skill":      { "type": "string" },
+        "timeout_ms": { "type": "integer" }
+      }
+    },
+    "daemon": {
+      "type": "object",
+      "properties": {
+        "prefer_existing": { "type": "boolean" }
+      }
+    },
+    "public_tunnel": {
+      "type": "object",
+      "properties": {
+        "enabled":           { "type": "boolean" },
+        "only_until_paired": { "type": "boolean" }
+      }
+    }
+  }
+}'''

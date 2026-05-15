@@ -13,7 +13,7 @@ use std::time::Duration;
 
 use anyhow::Result;
 use nexo_broker::{AnyBroker, BrokerHandle, Event};
-use nexo_config::WhatsappPluginConfig;
+use crate::config::WhatsappPluginConfig;
 use tokio::sync::oneshot;
 use uuid::Uuid;
 use whatsapp_rs::agent::{AgentCtx, Response};

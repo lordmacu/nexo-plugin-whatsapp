@@ -6,7 +6,7 @@
 
 use anyhow::{Context, Result};
 
-use nexo_config::types::plugins::{
+use crate::config::{
     WhatsappAclConfig, WhatsappBehaviorConfig, WhatsappBridgeConfig, WhatsappDaemonConfig,
     WhatsappPluginConfig, WhatsappPublicTunnelConfig, WhatsappRateLimitConfig,
     WhatsappTranscriberConfig,

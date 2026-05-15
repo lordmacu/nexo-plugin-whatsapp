@@ -27,6 +27,8 @@ pub mod bridge;
 pub mod dispatch;
 pub mod env_config;
 pub mod events;
+pub mod config;
+pub mod configured_state;
 pub mod lifecycle;
 pub mod media;
 pub mod pairing;
@@ -40,6 +42,12 @@ pub mod subprocess_dispatch;
 pub mod tool;
 pub mod transcriber;
 
+pub use config::{
+    WhatsappAclConfig, WhatsappBehaviorConfig, WhatsappBridgeConfig, WhatsappDaemonConfig,
+    WhatsappPluginConfig, WhatsappPluginConfigFile, WhatsappPluginShape,
+    WhatsappPublicTunnelConfig, WhatsappRateLimitConfig, WhatsappTranscriberConfig,
+};
+pub use configured_state::configured_state;
 pub use env_config::whatsapp_config_from_env;
 pub use events::InboundEvent;
 pub use pairing::{dispatch_route, QrSnapshot, SharedPairingState, StatusSnapshot, WhatsappRoute};
@@ -51,25 +59,6 @@ pub use session_id::session_id_for_jid;
 pub use subprocess_dispatch::{dispatch_whatsapp_tool, whatsapp_tool_defs};
 pub use tool::register_whatsapp_tools;
 
-use std::sync::Arc;
-
-use nexo_config::WhatsappPluginConfig;
-use nexo_core::agent::nexo_plugin_registry::PluginFactory;
-use nexo_core::agent::plugin_host::NexoPlugin;
-
-/// Factory builder for one whatsapp plugin instance, used by the
-/// in-process embedded path. Multi-account operators call this
-/// once per [`WhatsappPluginConfig`] (one per Signal Protocol
-/// session_dir / instance label) and register each result in a
-/// `PluginFactoryRegistry` under a distinct manifest name;
-/// `wire_plugin_registry(..., Some(&factory))` instantiates them
-/// on boot.
-///
-/// Subprocess consumers construct [`WhatsappPlugin`] directly inside
-/// `main.rs` from env-derived config and never touch this helper.
-pub fn whatsapp_plugin_factory(cfg: WhatsappPluginConfig) -> PluginFactory {
-    Box::new(move |_manifest| {
-        let plugin: Arc<dyn NexoPlugin> = Arc::new(WhatsappPlugin::new(cfg.clone()));
-        Ok(plugin)
-    })
-}
+// Phase 93.4.b — legacy `whatsapp_plugin_factory(cfg)` factory
+// removed; subprocess auto-factory replaces it. Local config
+// types own the shape (see `config` + `configured_state` modules).

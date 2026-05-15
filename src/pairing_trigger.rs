@@ -36,7 +36,7 @@ use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::Arc;
 
 use async_trait::async_trait;
-use nexo_config::WhatsappPluginConfig;
+use crate::config::WhatsappPluginConfig;
 use nexo_core::agent::admin_rpc::pairing_trigger::{
     PairingChannelTrigger, PairingContext, PairingHandle, PairingTriggerError,
 };
@@ -337,7 +337,7 @@ impl PairingChannelTrigger for WhatsappPairingTrigger {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use nexo_config::{
+    use crate::config::{
         WhatsappAclConfig, WhatsappBehaviorConfig, WhatsappBridgeConfig, WhatsappDaemonConfig,
         WhatsappPublicTunnelConfig, WhatsappRateLimitConfig, WhatsappTranscriberConfig,
     };
