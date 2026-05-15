@@ -1,5 +1,29 @@
 # Changelog
 
+## 0.3.0 — 2026-05-15
+
+### Added
+
+- Manifest declares `[plugin.credentials_schema]` (Phase 93.8.a-daemon)
+  with `enabled = true` + `accounts_shape = "array"`. Daemon's
+  `SubprocessNexoPlugin::credential_store()` reads this section
+  and instantiates a `RemoteCredentialStore` round-tripping the
+  four `plugin.credentials.*` JSON-RPCs.
+- SDK `on_credentials_list` / `on_credentials_issue` /
+  `on_credentials_resolve_bytes` / `on_credentials_reload`
+  handlers registered in `main.rs`, all backed by
+  `configured_state()`. List returns instance names, issue
+  enforces `allow_agents` allowlist, resolve_bytes returns the
+  serde_json-encoded `WhatsappPluginConfig`.
+- `WhatsappPluginConfig` + sub-structs now derive `Serialize` so
+  the resolve_bytes handler can round-trip through serde_json.
+
+### Tests
+
+- `tests/credentials_path.rs` — 5 integration tests covering
+  list / issue allow-list paths / not-found / resolve_bytes
+  round-trip.
+
 ## 0.2.0 — 2026-05-15
 
 ### Breaking

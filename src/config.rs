@@ -11,12 +11,12 @@
 //! Field shapes mirror `nexo_config::types::plugins::Whatsapp*`
 //! verbatim — operator YAML keeps working unchanged.
 
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 
 /// Wrapper matching the YAML wire shape (`whatsapp:` top-level key
 /// followed by single-account map or array of maps). Plugin tests
 /// + the legacy env-config-from-disk migrators consume this.
-#[derive(Debug, Deserialize, Clone)]
+#[derive(Debug, Deserialize, Serialize, Clone)]
 #[serde(deny_unknown_fields)]
 pub struct WhatsappPluginConfigFile {
     pub whatsapp: WhatsappPluginShape,
@@ -25,7 +25,7 @@ pub struct WhatsappPluginConfigFile {
 /// Operator YAML accepts either a single map (legacy single-account)
 /// or a sequence of maps (multi-account).
 #[allow(clippy::large_enum_variant)]
-#[derive(Debug, Deserialize, Clone)]
+#[derive(Debug, Deserialize, Serialize, Clone)]
 #[serde(untagged)]
 pub enum WhatsappPluginShape {
     Single(WhatsappPluginConfig),
@@ -41,7 +41,7 @@ impl WhatsappPluginShape {
     }
 }
 
-#[derive(Debug, Deserialize, Clone)]
+#[derive(Debug, Deserialize, Serialize, Clone)]
 #[serde(deny_unknown_fields)]
 pub struct WhatsappPluginConfig {
     #[serde(default = "default_enabled")]
@@ -75,7 +75,7 @@ pub struct WhatsappPluginConfig {
     pub typing_mode: Option<String>,
 }
 
-#[derive(Debug, Deserialize, Clone)]
+#[derive(Debug, Deserialize, Serialize, Clone)]
 #[serde(deny_unknown_fields)]
 pub struct WhatsappPublicTunnelConfig {
     #[serde(default)]
@@ -93,7 +93,7 @@ impl Default for WhatsappPublicTunnelConfig {
     }
 }
 
-#[derive(Debug, Deserialize, Clone)]
+#[derive(Debug, Deserialize, Serialize, Clone)]
 #[serde(deny_unknown_fields)]
 pub struct WhatsappAclConfig {
     #[serde(default)]
@@ -111,7 +111,7 @@ impl Default for WhatsappAclConfig {
     }
 }
 
-#[derive(Debug, Deserialize, Clone)]
+#[derive(Debug, Deserialize, Serialize, Clone)]
 #[serde(deny_unknown_fields)]
 pub struct WhatsappBehaviorConfig {
     #[serde(default = "default_true")]
@@ -135,7 +135,7 @@ impl Default for WhatsappBehaviorConfig {
     }
 }
 
-#[derive(Debug, Deserialize, Clone)]
+#[derive(Debug, Deserialize, Serialize, Clone)]
 #[serde(deny_unknown_fields)]
 pub struct WhatsappRateLimitConfig {
     #[serde(default = "default_rate_global")]
@@ -156,7 +156,7 @@ impl Default for WhatsappRateLimitConfig {
     }
 }
 
-#[derive(Debug, Deserialize, Clone)]
+#[derive(Debug, Deserialize, Serialize, Clone)]
 #[serde(deny_unknown_fields)]
 pub struct WhatsappBridgeConfig {
     #[serde(default = "default_response_timeout_ms")]
@@ -177,7 +177,7 @@ impl Default for WhatsappBridgeConfig {
     }
 }
 
-#[derive(Debug, Deserialize, Clone)]
+#[derive(Debug, Deserialize, Serialize, Clone)]
 #[serde(deny_unknown_fields)]
 pub struct WhatsappTranscriberConfig {
     #[serde(default)]
@@ -198,7 +198,7 @@ impl Default for WhatsappTranscriberConfig {
     }
 }
 
-#[derive(Debug, Deserialize, Clone)]
+#[derive(Debug, Deserialize, Serialize, Clone)]
 #[serde(deny_unknown_fields)]
 pub struct WhatsappDaemonConfig {
     #[serde(default = "default_true")]

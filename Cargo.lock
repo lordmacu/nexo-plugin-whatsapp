@@ -2196,6 +2196,7 @@ version = "0.1.7"
 dependencies = [
  "anyhow",
  "arc-swap",
+ "async-trait",
  "base64 0.22.1",
  "dashmap",
  "hex",
@@ -2634,6 +2635,7 @@ name = "nexo-microapp-sdk"
 version = "0.1.15"
 dependencies = [
  "async-trait",
+ "base64 0.22.1",
  "dashmap",
  "nexo-broker",
  "nexo-llm",
@@ -2692,7 +2694,7 @@ dependencies = [
 
 [[package]]
 name = "nexo-plugin-whatsapp"
-version = "0.2.0"
+version = "0.3.0"
 dependencies = [
  "anyhow",
  "async-trait",
