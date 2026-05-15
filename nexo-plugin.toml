@@ -8,7 +8,7 @@
 
 [plugin]
 id              = "whatsapp"
-version         = "0.3.0"
+version         = "0.4.0"
 name            = "WhatsApp Bot"
 description     = "WhatsApp channel plugin via wa-agent (Signal Protocol + Bot API + QR pairing)."
 min_nexo_version = ">=0.1.0"
@@ -21,7 +21,21 @@ nexo_capabilities = ["broker"]
 # `>` matches the per-instance suffix (`whatsapp.<instance>` and
 # `whatsapp` legacy single-account).
 [plugin.capabilities.broker]
-subscribe = ["plugin.outbound.whatsapp", "plugin.outbound.whatsapp.>"]
+subscribe = [
+    "plugin.outbound.whatsapp",
+    "plugin.outbound.whatsapp.>",
+    # Phase 81.33.b.real Stages 1+2+4+5 — auto-discovery broker
+    # handler topics. Daemon-side helpers publish here; the
+    # plugin's auto-discovery subscriber loop in `src/main.rs`
+    # parses + replies per the JSON contract documented at
+    # `proyecto/docs/src/plugins/manifest-{pairing-adapter,http,admin,metrics}.md`.
+    "plugin.whatsapp.pairing.normalize_sender",
+    "plugin.whatsapp.pairing.send_reply",
+    "plugin.whatsapp.pairing.send_qr_image",
+    "plugin.whatsapp.http.request",
+    "plugin.whatsapp.admin.>",
+    "plugin.whatsapp.metrics.scrape",
+]
 publish   = ["plugin.inbound.whatsapp",  "plugin.inbound.whatsapp.>"]
 
 # Plugin-driven pairing UI descriptor. Consumed by the
@@ -35,6 +49,51 @@ label = "WhatsApp"
 [plugin.pairing.instructions]
 es = "Abrí WhatsApp en tu teléfono → Configuración → Dispositivos vinculados → Vincular un dispositivo, y escaneá el código QR."
 en = "Open WhatsApp on your phone → Settings → Linked Devices → Link a device, and scan the QR code."
+
+# Phase 81.33.b.real Stage 1 — pairing adapter via broker dispatch.
+# Daemon's `GenericBrokerPairingAdapter` constructs from this section
+# + forwards `PairingChannelAdapter` trait calls to the broker topics
+# under `broker_topic_prefix`. Plugin's auto_discovery subscriber
+# loop in `src/main.rs` handles each.
+[plugin.pairing.adapter]
+channel_id          = "whatsapp"
+broker_topic_prefix = "plugin.whatsapp"
+
+# Phase 81.33.b.real Stage 2 — daemon mounts a generic HTTP proxy
+# under this prefix on `:8080`. Forwards every request via
+# `plugin.whatsapp.http.request` broker JSON-RPC. The plugin owns
+# its internal router under the prefix (see `src/auto_discovery.rs::http_request`).
+[plugin.http]
+mount_prefix    = "/whatsapp"
+timeout_seconds = 30
+
+# Phase 81.33.b.real Stage 4 — admin RPC commands forwarded via
+# broker. Daemon receives `nexo/admin/whatsapp/<verb>` from operators
+# + forwards to `plugin.whatsapp.admin.<verb>`.
+[plugin.admin]
+method_prefix       = "nexo/admin/whatsapp/"
+broker_topic_prefix = "plugin.whatsapp.admin"
+timeout_seconds     = 15
+
+# Phase 81.33.b.real Stage 5 — Prometheus metrics scrape. Daemon's
+# `/metrics` aggregator iterates declarers + appends each plugin's
+# scrape output. Topic: `plugin.whatsapp.metrics.scrape`.
+[plugin.metrics]
+prometheus          = true
+broker_topic_prefix = "plugin.whatsapp"
+timeout_seconds     = 5
+
+# Phase 81.33.b.real Stage 6 — setup wizard dashboard surface.
+# WhatsApp is multi-instance per-agent; the wizard walks
+# `<workspace>/<agent>/whatsapp/<instance>/` and probes session
+# files inside each instance directory to decide auth state.
+[plugin.dashboard.layout]
+kind   = "workspace_walk"
+subdir = "whatsapp"
+
+[plugin.dashboard.auth_check]
+kind       = "session_dir_files"
+candidates = ["session.db", "state.db", "device.json", "registration.json"]
 
 # Phase 93.4.b — declarative config contract. Daemon delivers
 # operator YAML at `cfg.plugins.entries.whatsapp` (Phase 93.3) via

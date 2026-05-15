@@ -250,6 +250,21 @@ async fn main() -> anyhow::Result<()> {
         adapter
     };
 
+    // Phase 81.33.b.real v0.4 — auto-discovery broker subscriber
+    // loop. Spawned unconditionally for both stdio_bridge and
+    // NATS modes so daemon-published requests on
+    // `plugin.whatsapp.*` reach handlers in
+    // `auto_discovery::*`. Lib-linked daemons (feature on) skip
+    // main.rs entirely, so spawning here is safe.
+    match auto_discovery_broker().await {
+        Ok(broker) => spawn_auto_discovery_subscribers(broker),
+        Err(e) => tracing::warn!(
+            target = "nexo_plugin_whatsapp",
+            error = %e,
+            "auto-discovery broker unavailable; subscribers not spawned (tool.invoke path unaffected)"
+        ),
+    }
+
     // Eagerly boot the plugin so the inbound bridge connects to
     // WhatsApp BEFORE the first `tool.invoke`. Without this the
     // subprocess sits idle on stdio after handshake — no Signal
@@ -270,4 +285,115 @@ async fn main() -> anyhow::Result<()> {
 
     adapter.run_stdio().await?;
     Ok(())
+}
+
+/// Construct the broker handle the auto-discovery subscriber loop
+/// reads from. Mirrors `build_broker` but returns `anyhow` so
+/// startup wiring can log + skip cleanly instead of failing the
+/// whole process — a plugin without subscribers still answers
+/// `tool.invoke` via the JSON-RPC channel.
+async fn auto_discovery_broker() -> anyhow::Result<AnyBroker> {
+    let kind = std::env::var("NEXO_BROKER_KIND").unwrap_or_else(|_| "nats".to_string());
+    if kind == "stdio_bridge" {
+        let bridge = BRIDGE
+            .get()
+            .ok_or_else(|| anyhow::anyhow!("BRIDGE not initialized"))?;
+        return Ok(AnyBroker::stdio_bridge((**bridge).clone()));
+    }
+    let url = std::env::var("NEXO_BROKER_URL")
+        .map_err(|_| anyhow::anyhow!("NEXO_BROKER_URL not set"))?;
+    let inner = nexo_config::types::broker::BrokerInner {
+        kind: if url.starts_with("nats://") {
+            nexo_config::types::broker::BrokerKind::Nats
+        } else {
+            nexo_config::types::broker::BrokerKind::Local
+        },
+        url,
+        auth: nexo_config::types::broker::BrokerAuthConfig::default(),
+        persistence: nexo_config::types::broker::BrokerPersistenceConfig::default(),
+        limits: nexo_config::types::broker::BrokerLimitsConfig::default(),
+        fallback: nexo_config::types::broker::BrokerFallbackConfig::default(),
+    };
+    AnyBroker::from_config(&inner)
+        .await
+        .map_err(|e| anyhow::anyhow!("broker connect failed: {e}"))
+}
+
+/// Phase 81.33.b.real v0.4 — auto-discovery broker subscriber
+/// loop. Spawns one tokio task per request-reply topic family.
+/// Each task subscribes, parses `Message` from each inbound
+/// `Event.payload`, dispatches to the matching async handler,
+/// and publishes the reply back to `msg.reply_to`.
+fn spawn_auto_discovery_subscribers(broker: AnyBroker) {
+    use nexo_plugin_whatsapp::auto_discovery as ad;
+
+    spawn_one(broker.clone(), "plugin.whatsapp.pairing.normalize_sender", |_b, p| async move {
+        ad::pairing_normalize_sender(&p)
+    });
+    spawn_one(broker.clone(), "plugin.whatsapp.pairing.send_reply", |b, p| async move {
+        ad::pairing_send_reply(&b, &p).await
+    });
+    spawn_one(broker.clone(), "plugin.whatsapp.pairing.send_qr_image", |b, p| async move {
+        ad::pairing_send_qr_image(&b, &p).await
+    });
+    spawn_one(broker.clone(), "plugin.whatsapp.http.request", |_b, p| async move {
+        ad::http_request(&p).await
+    });
+    spawn_one(broker.clone(), "plugin.whatsapp.metrics.scrape", |_b, p| async move {
+        ad::metrics_scrape(&p).await
+    });
+    spawn_one(broker, "plugin.whatsapp.admin.>", |_b, p| async move {
+        ad::admin_handle(&p).await
+    });
+}
+
+fn spawn_one<F, Fut>(broker: AnyBroker, topic: &'static str, handler: F)
+where
+    F: Fn(AnyBroker, serde_json::Value) -> Fut + Send + Sync + 'static,
+    Fut: std::future::Future<Output = serde_json::Value> + Send + 'static,
+{
+    use nexo_broker::{BrokerHandle, Event, Message};
+    tokio::spawn(async move {
+        let mut sub = match broker.subscribe(topic).await {
+            Ok(s) => s,
+            Err(e) => {
+                tracing::warn!(
+                    target = "whatsapp.auto_discovery",
+                    topic,
+                    error = %e,
+                    "subscribe failed; topic will not receive requests"
+                );
+                return;
+            }
+        };
+        tracing::info!(target = "whatsapp.auto_discovery", topic, "subscriber up");
+        while let Some(event) = sub.next().await {
+            let Ok(msg) = serde_json::from_value::<Message>(event.payload) else {
+                continue;
+            };
+            let Some(reply_to) = msg.reply_to.clone() else {
+                continue;
+            };
+            let reply_payload = handler(broker.clone(), msg.payload.clone()).await;
+            let reply_msg = Message::new(reply_to.clone(), reply_payload);
+            let reply_event = Event::new(
+                reply_to.clone(),
+                "whatsapp",
+                match serde_json::to_value(&reply_msg) {
+                    Ok(v) => v,
+                    Err(_) => continue,
+                },
+            );
+            if let Err(e) = broker.publish(&reply_to, reply_event).await {
+                tracing::warn!(
+                    target = "whatsapp.auto_discovery",
+                    topic,
+                    reply_to = %reply_to,
+                    error = %e,
+                    "failed to publish reply"
+                );
+            }
+        }
+        tracing::debug!(target = "whatsapp.auto_discovery", topic, "subscriber stream ended");
+    });
 }

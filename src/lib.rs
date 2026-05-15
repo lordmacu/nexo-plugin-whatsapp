@@ -22,6 +22,7 @@
 //!    `WhatsappPlugin::new(cfg)`. The `embedded` cargo feature drops
 //!    subprocess code paths so the resulting binary stays lean.
 
+pub mod auto_discovery;
 pub mod bot_registry;
 pub mod bridge;
 pub mod dispatch;
