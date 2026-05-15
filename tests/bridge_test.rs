@@ -6,7 +6,7 @@ use std::time::Duration;
 
 use dashmap::DashMap;
 use nexo_broker::{AnyBroker, BrokerHandle, Event};
-use nexo_config::{
+use nexo_plugin_whatsapp::{
     WhatsappAclConfig, WhatsappBehaviorConfig, WhatsappBridgeConfig, WhatsappDaemonConfig,
     WhatsappPluginConfig, WhatsappRateLimitConfig, WhatsappTranscriberConfig,
 };

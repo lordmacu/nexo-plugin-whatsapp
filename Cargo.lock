@@ -2643,6 +2643,7 @@ dependencies = [
  "reqwest",
  "serde",
  "serde_json",
+ "serde_yaml",
  "thiserror 1.0.69",
  "tokio",
  "toml",
@@ -2691,7 +2692,7 @@ dependencies = [
 
 [[package]]
 name = "nexo-plugin-whatsapp"
-version = "0.1.8"
+version = "0.2.0"
 dependencies = [
  "anyhow",
  "async-trait",

@@ -26,7 +26,7 @@
 use std::time::Duration;
 
 use nexo_broker::AnyBroker;
-use nexo_config::{
+use nexo_plugin_whatsapp::{
     WhatsappAclConfig, WhatsappBehaviorConfig, WhatsappBridgeConfig, WhatsappDaemonConfig,
     WhatsappPluginConfig, WhatsappRateLimitConfig, WhatsappTranscriberConfig,
 };

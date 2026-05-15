@@ -1,5 +1,45 @@
 # Changelog
 
+## 0.2.0 — 2026-05-15
+
+### Breaking
+
+- Plugin owns its config types. `nexo_config::WhatsappPluginConfig`
+  + sub-structs (`WhatsappPublicTunnelConfig`, `WhatsappAclConfig`,
+  `WhatsappBehaviorConfig`, `WhatsappRateLimitConfig`,
+  `WhatsappBridgeConfig`, `WhatsappTranscriberConfig`,
+  `WhatsappDaemonConfig`) no longer come from `nexo-config`;
+  equivalent definitions live in `nexo_plugin_whatsapp::config`.
+  Field shapes byte-for-byte identical so operator YAML keeps
+  working.
+- `whatsapp_plugin_factory(cfg)` factory function removed.
+  Subprocess auto-factory replaces it.
+- Manifest version bumped `"0.1.8" → "0.2.0"` to match crate.
+
+### Added
+
+- Manifest declares `[plugin.config_schema]` (Phase 93.1) with
+  `shape = "array"` + full JSON Schema covering acl / behavior /
+  rate_limit / bridge / transcriber / daemon / public_tunnel
+  knobs.
+- SDK `on_configure(...)` handler (Phase 93.4.a-sdk) receives
+  operator YAML via `plugin.configure` JSON-RPC (Phase 93.2);
+  caches `Vec<WhatsappPluginConfig>` via the new
+  `configured_state()` accessor.
+- `shared_plugin()` prefers configured state; falls back to
+  `whatsapp_config_from_env()` env-var path during the 0.2.x
+  deprecation window.
+- 5 new integration tests in `tests/configure_path.rs` —
+  deserialise / unknown-field rejection / hot-reload re-call /
+  env fallback / precedence (configure-wins-over-env).
+
+### Backward compatibility
+
+- Env-var fallback (`NEXO_PLUGIN_WHATSAPP_*` vars) keeps working
+  when daemon doesn't deliver `plugin.configure`. Removed in a
+  future 0.3.0 once Phase 93.5 closes the daemon-side
+  typed-fields deprecation window.
+
 ## 0.1.2 — 2026-05-09
 
 Initial extract from `proyecto/crates/plugins/whatsapp/` per Phase
