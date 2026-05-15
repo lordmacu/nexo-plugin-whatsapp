@@ -23,3 +23,15 @@ nexo_capabilities = ["broker"]
 [plugin.capabilities.broker]
 subscribe = ["plugin.outbound.whatsapp", "plugin.outbound.whatsapp.>"]
 publish   = ["plugin.inbound.whatsapp",  "plugin.inbound.whatsapp.>"]
+
+# Plugin-driven pairing UI descriptor. Consumed by the
+# admin's `nexo/admin/pairing/channels` RPC to drive the
+# channel-selector + per-channel modal flow generically —
+# no per-channel hardcoded logic in the admin frontend.
+[plugin.pairing]
+kind  = "qr"
+label = "WhatsApp"
+
+[plugin.pairing.instructions]
+es = "Abrí WhatsApp en tu teléfono → Configuración → Dispositivos vinculados → Vincular un dispositivo, y escaneá el código QR."
+en = "Open WhatsApp on your phone → Settings → Linked Devices → Link a device, and scan the QR code."
