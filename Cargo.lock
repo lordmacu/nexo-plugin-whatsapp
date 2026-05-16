@@ -2192,7 +2192,7 @@ dependencies = [
 
 [[package]]
 name = "nexo-auth"
-version = "0.1.7"
+version = "0.1.8"
 dependencies = [
  "anyhow",
  "arc-swap",
@@ -2215,7 +2215,7 @@ dependencies = [
 
 [[package]]
 name = "nexo-broker"
-version = "0.1.4"
+version = "0.1.5"
 dependencies = [
  "anyhow",
  "async-nats",
@@ -2238,7 +2238,7 @@ dependencies = [
 
 [[package]]
 name = "nexo-config"
-version = "0.1.8"
+version = "0.1.9"
 dependencies = [
  "anyhow",
  "humantime-serde",
@@ -2254,7 +2254,7 @@ dependencies = [
 
 [[package]]
 name = "nexo-core"
-version = "0.1.18"
+version = "0.1.19"
 dependencies = [
  "anyhow",
  "arc-swap",
@@ -2632,7 +2632,7 @@ dependencies = [
 
 [[package]]
 name = "nexo-microapp-sdk"
-version = "0.1.16"
+version = "0.1.18"
 dependencies = [
  "async-trait",
  "base64 0.22.1",
@@ -2656,7 +2656,7 @@ dependencies = [
 
 [[package]]
 name = "nexo-pairing"
-version = "0.1.5"
+version = "0.1.6"
 dependencies = [
  "anyhow",
  "async-trait",
@@ -2682,7 +2682,7 @@ dependencies = [
 
 [[package]]
 name = "nexo-plugin-manifest"
-version = "0.1.4"
+version = "0.1.5"
 dependencies = [
  "anyhow",
  "regex",
@@ -2696,7 +2696,7 @@ dependencies = [
 
 [[package]]
 name = "nexo-plugin-whatsapp"
-version = "0.4.0"
+version = "0.4.1"
 dependencies = [
  "anyhow",
  "async-trait",
@@ -2797,7 +2797,7 @@ dependencies = [
 
 [[package]]
 name = "nexo-tool-meta"
-version = "0.1.14"
+version = "0.1.15"
 dependencies = [
  "base64 0.22.1",
  "chrono",

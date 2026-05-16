@@ -14,7 +14,7 @@
 
 [package]
 name        = "nexo-plugin-whatsapp"
-version     = "0.4.0"
+version     = "0.4.1"
 description = "WhatsApp bot plugin for Nexo agents (out-of-tree subprocess + embedded lib)."
 edition     = "2021"
 license     = "MIT OR Apache-2.0"
@@ -63,7 +63,7 @@ live-wa = []
 
 [dependencies]
 # Path-deps interim until proyecto crates publish to crates.io.
-nexo-microapp-sdk    = { version = "0.1.16", path = "../proyecto/crates/microapp-sdk", features = ["plugin"] }
+nexo-microapp-sdk    = { version = "0.1.18", path = "../proyecto/crates/microapp-sdk", features = ["plugin"] }
 nexo-broker          = { version = "0.1.1",  path = "../proyecto/crates/broker" }
 nexo-core            = { version = "0.1.1",  path = "../proyecto/crates/core" }
 nexo-config          = { version = "0.1.1",  path = "../proyecto/crates/config" }

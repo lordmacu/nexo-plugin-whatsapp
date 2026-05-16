@@ -1,5 +1,25 @@
 # Changelog
 
+## 0.4.1 — 2026-05-16
+
+### Added
+
+- **Stage 8 cargo-install ergonomics.**
+  `nexo_microapp_sdk::plugin::print_manifest_if_requested(MANIFEST)`
+  inserted as the first call of `main()`. The daemon's binary-
+  mode discovery walker invokes `nexo-plugin-whatsapp --print-manifest`
+  to extract the bundled TOML and register the plugin without
+  spawning the full subprocess. Operators install via
+  `cargo install nexo-plugin-whatsapp` and the daemon auto-
+  detects it in `$HOME/.cargo/bin/`.
+
+### Changed
+
+- Bump `nexo-microapp-sdk` dep 0.1.16 → 0.1.18 (provides
+  `print_manifest_if_requested`).
+- Bump version 0.4.0 → 0.4.1. Manifest TOML aligned to 0.4.1.
+- Unit tests assert manifest version 0.4.1 (were stale at 0.3.0).
+
 ## 0.3.0 — 2026-05-15
 
 ### Added

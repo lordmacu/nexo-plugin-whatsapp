@@ -147,6 +147,13 @@ async fn shared_plugin() -> Result<Arc<WhatsappPlugin>, ToolInvocationError> {
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
+    // Stage 8 cargo-install ergonomics. When the daemon's binary-
+    // mode discovery walker probes us with
+    // `nexo-plugin-whatsapp --print-manifest` we emit the bundled
+    // TOML to stdout and exit 0 BEFORE tracing init / broker
+    // wiring — the walker needs only the manifest bytes.
+    nexo_microapp_sdk::plugin::print_manifest_if_requested(MANIFEST);
+
     tracing_subscriber::fmt()
         .with_env_filter(
             tracing_subscriber::EnvFilter::try_from_default_env()
