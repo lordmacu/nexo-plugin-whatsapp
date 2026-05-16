@@ -145,6 +145,22 @@ async fn shared_plugin() -> Result<Arc<WhatsappPlugin>, ToolInvocationError> {
         .cloned()
 }
 
+/// Scan `std::env::args()` for the `--pair-once <session_dir>`
+/// CLI shape the setup wizard spawns. Returns `Some(session_dir)`
+/// when both `--pair-once` and a following positional argument
+/// are present, `None` otherwise. Tolerates the flag in any
+/// position so future arg-handling layers (e.g. `--print-manifest`
+/// which fires first) don't clobber the parse.
+fn parse_pair_once_arg() -> Option<String> {
+    let mut iter = std::env::args().skip(1);
+    while let Some(a) = iter.next() {
+        if a == "--pair-once" {
+            return iter.next();
+        }
+    }
+    None
+}
+
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
     // Stage 8 cargo-install ergonomics. When the daemon's binary-
@@ -153,6 +169,20 @@ async fn main() -> anyhow::Result<()> {
     // TOML to stdout and exit 0 BEFORE tracing init / broker
     // wiring — the walker needs only the manifest bytes.
     nexo_microapp_sdk::plugin::print_manifest_if_requested(MANIFEST);
+
+    // Phase 81.20.x Bucket C2 BC.4 — `--pair-once <session_dir>`
+    // subcommand. The nexo setup wizard spawns us in this mode
+    // for interactive WhatsApp pairing instead of calling
+    // `nexo_plugin_whatsapp::session::pair_once` in-process from
+    // the setup crate. Eliminates setup's `nexo-plugin-whatsapp`
+    // Cargo dep so the framework setup tooling stays
+    // plugin-agnostic. We run wa-agent's QR flow, print the QR
+    // ASCII to stdout, exit when the user scans + Signal session
+    // persists.
+    if let Some(session_dir) = parse_pair_once_arg() {
+        let session_path = std::path::PathBuf::from(session_dir);
+        return nexo_plugin_whatsapp::session::pair_once(&session_path).await;
+    }
 
     tracing_subscriber::fmt()
         .with_env_filter(

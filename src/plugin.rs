@@ -439,7 +439,7 @@ mod nexo_plugin_tests {
     fn manifest_parses_and_id_is_whatsapp() {
         let m: PluginManifest = toml::from_str(MANIFEST_TOML).unwrap();
         assert_eq!(m.plugin.id, "whatsapp");
-        assert_eq!(m.plugin.version.to_string(), "0.4.2");
+        assert_eq!(m.plugin.version.to_string(), "0.4.3");
         assert_eq!(
             m.plugin.requires.nexo_capabilities,
             vec!["broker".to_string()]
@@ -456,7 +456,7 @@ mod nexo_plugin_tests {
         let plugin = WhatsappPlugin::new(test_whatsapp_config(None));
         let nexo: &dyn NexoPlugin = &plugin;
         assert_eq!(nexo.manifest().plugin.id, "whatsapp");
-        assert_eq!(nexo.manifest().plugin.version.to_string(), "0.4.2");
+        assert_eq!(nexo.manifest().plugin.version.to_string(), "0.4.3");
     }
 
     #[test]
