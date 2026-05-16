@@ -1983,6 +1983,15 @@ checksum = "5e5032e24019045c762d3c0f28f5b6b8bbf38563a65908389bf7978758920897"
 
 [[package]]
 name = "lru"
+version = "0.12.5"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "234cf4f4a04dc1f57e24b96cc0cd600cf2af460d4161ac5ecdd0af8e1f3b2a38"
+dependencies = [
+ "hashbrown 0.15.5",
+]
+
+[[package]]
+name = "lru"
 version = "0.17.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "0e0b564323a0fb6d54b864f625ae139de9612e27edb944dda37c109f05aac531"
@@ -2163,6 +2172,8 @@ checksum = "650eef8c711430f1a879fdd01d4745a7deea475becfb90269c06775983bbf086"
 [[package]]
 name = "nexo-agent-registry"
 version = "0.1.7"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "b8c7ea91e9726b958e2252b270eddc7e14c9d1c773e2510eda4ec2a628994ef9"
 dependencies = [
  "arc-swap",
  "async-trait",
@@ -2185,6 +2196,8 @@ dependencies = [
 [[package]]
 name = "nexo-assistant"
 version = "0.1.7"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "4419e679b041bb91cc555d7b9a5b581c5cce46309dc5dd2f6be402e09b717302"
 dependencies = [
  "nexo-config",
  "serde",
@@ -2193,6 +2206,8 @@ dependencies = [
 [[package]]
 name = "nexo-auth"
 version = "0.1.8"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "60c1aabfc5485aa86d1371d568c1a956306efc1ebada22f0437bd1763dd5dc40"
 dependencies = [
  "anyhow",
  "arc-swap",
@@ -2216,6 +2231,8 @@ dependencies = [
 [[package]]
 name = "nexo-broker"
 version = "0.1.5"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "9f30838307413ac993e947b5944f62d0f5ed7ba1f0c1ff1adbc5182ed935499c"
 dependencies = [
  "anyhow",
  "async-nats",
@@ -2239,6 +2256,8 @@ dependencies = [
 [[package]]
 name = "nexo-config"
 version = "0.1.9"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "a0427d5b74b74ae5d6ef336d44cedbbbd408dfafd8940e0085c5a44eeaad4f15"
 dependencies = [
  "anyhow",
  "humantime-serde",
@@ -2255,6 +2274,8 @@ dependencies = [
 [[package]]
 name = "nexo-core"
 version = "0.1.19"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "95b03aab5b4713ae1e78b72c93370c515c9f0622e4aae2e69cd8a92339928d27"
 dependencies = [
  "anyhow",
  "arc-swap",
@@ -2269,7 +2290,7 @@ dependencies = [
  "hmac",
  "humantime",
  "jsonschema",
- "lru",
+ "lru 0.17.0",
  "nexo-agent-registry",
  "nexo-assistant",
  "nexo-auth",
@@ -2318,6 +2339,8 @@ dependencies = [
 [[package]]
 name = "nexo-dispatch-tools"
 version = "0.1.7"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "a020f634535731bd71c34f3c0a4f717278e9dbb3886d6c4946c83a980a65a869"
 dependencies = [
  "anyhow",
  "async-nats",
@@ -2349,6 +2372,8 @@ dependencies = [
 [[package]]
 name = "nexo-driver-claude"
 version = "0.1.7"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "04fc17c8dedadea09cc566980076f29d68193fa19f8797477eefb626bb050090"
 dependencies = [
  "async-trait",
  "chrono",
@@ -2369,6 +2394,8 @@ dependencies = [
 [[package]]
 name = "nexo-driver-loop"
 version = "0.1.7"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "d205a70d31b04d7c5688ee34378386d4f85a960db1500b19bf8729f25da310c9"
 dependencies = [
  "anyhow",
  "async-nats",
@@ -2398,6 +2425,8 @@ dependencies = [
 [[package]]
 name = "nexo-driver-permission"
 version = "0.1.7"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "6a0fafd6d38e5b45ef287ce0162fdc0a28b8db4e450d0bfbdef9166fc84114df"
 dependencies = [
  "anyhow",
  "async-trait",
@@ -2417,6 +2446,8 @@ dependencies = [
 [[package]]
 name = "nexo-driver-types"
 version = "0.1.7"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "80e75fff08a6170632c436e2d33c6703844dfe8b62a583bc9c7d91ab063f8dd9"
 dependencies = [
  "async-trait",
  "chrono",
@@ -2432,6 +2463,8 @@ dependencies = [
 [[package]]
 name = "nexo-extensions"
 version = "0.1.4"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "fecf151305939290ddbfae78b75328736b86bece14674a6fee2feceab6e573ab"
 dependencies = [
  "anyhow",
  "async-trait",
@@ -2464,6 +2497,8 @@ dependencies = [
 [[package]]
 name = "nexo-llm"
 version = "0.1.5"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "a1174b11645f477e2179019f0443a0c2c0bcead33225aeabbe963c731c0c7114"
 dependencies = [
  "anyhow",
  "async-trait",
@@ -2475,7 +2510,7 @@ dependencies = [
  "eventsource-stream",
  "futures",
  "hex",
- "lru",
+ "lru 0.12.5",
  "nexo-config",
  "nexo-resilience",
  "nexo-tool-meta",
@@ -2493,6 +2528,8 @@ dependencies = [
 [[package]]
 name = "nexo-llm-auth"
 version = "0.1.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "3ef9e77de9cda071966a7bc8b0eeaddba6943d214ab7297bf1312c919a89c959"
 dependencies = [
  "anyhow",
  "async-trait",
@@ -2513,6 +2550,8 @@ dependencies = [
 [[package]]
 name = "nexo-lsp"
 version = "0.1.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "7892d3eac0eb8f6dc660c51270153d2d711f839edf0a72feaabef35c7bd541f8"
 dependencies = [
  "anyhow",
  "async-trait",
@@ -2533,6 +2572,8 @@ dependencies = [
 [[package]]
 name = "nexo-mcp"
 version = "0.1.5"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "e24ccddd5cfed61efd199103a6619780e63e1e3ab595ec2daf15c476798733c9"
 dependencies = [
  "anyhow",
  "async-stream",
@@ -2545,7 +2586,7 @@ dependencies = [
  "futures-util",
  "headers",
  "jsonwebtoken",
- "lru",
+ "lru 0.12.5",
  "nexo-broker",
  "nexo-config",
  "nexo-extensions",
@@ -2579,6 +2620,8 @@ dependencies = [
 [[package]]
 name = "nexo-memory"
 version = "0.1.5"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "b69bbb88cbe0d248ee48cf1c6003a865964e480ff68416d7c73b8f97adda1f61"
 dependencies = [
  "anyhow",
  "async-trait",
@@ -2586,7 +2629,7 @@ dependencies = [
  "dashmap",
  "hex",
  "libsqlite3-sys",
- "lru",
+ "lru 0.12.5",
  "nexo-driver-types",
  "nexo-llm",
  "regex",
@@ -2609,6 +2652,8 @@ dependencies = [
 [[package]]
 name = "nexo-memory-snapshot"
 version = "0.1.4"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "157540150461e439e4df6483b61c617adedb1737734f356cccfde4f049c44cfa"
 dependencies = [
  "async-trait",
  "chrono",
@@ -2633,6 +2678,8 @@ dependencies = [
 [[package]]
 name = "nexo-microapp-sdk"
 version = "0.1.18"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "5f865c4f7dfc3d0a73f0fee0ab27c9b76a9160eac70ef1da4fc67d2f0440efbf"
 dependencies = [
  "async-trait",
  "base64 0.22.1",
@@ -2657,6 +2704,8 @@ dependencies = [
 [[package]]
 name = "nexo-pairing"
 version = "0.1.6"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "c713a7f79cc6328232da943e0d9665112809284488bf027b982e274d61e30945"
 dependencies = [
  "anyhow",
  "async-trait",
@@ -2683,6 +2732,8 @@ dependencies = [
 [[package]]
 name = "nexo-plugin-manifest"
 version = "0.1.5"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "411a0b343b29fd8fdfd3664c2a26990ff42c7fde5bd61e99f1f81b4cef558563"
 dependencies = [
  "anyhow",
  "regex",
@@ -2696,7 +2747,7 @@ dependencies = [
 
 [[package]]
 name = "nexo-plugin-whatsapp"
-version = "0.4.1"
+version = "0.4.2"
 dependencies = [
  "anyhow",
  "async-trait",
@@ -2737,6 +2788,8 @@ dependencies = [
 [[package]]
 name = "nexo-project-tracker"
 version = "0.1.7"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "de67b81feea74493fa8ec5e2ff2f496ee7203146007fc091219385c6e9809056"
 dependencies = [
  "arc-swap",
  "async-trait",
@@ -2756,6 +2809,8 @@ dependencies = [
 [[package]]
 name = "nexo-resilience"
 version = "0.1.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "7b278effddcf6661209a5528036fa994ec77c62f6efc6398e04179f6cf8aa6cf"
 dependencies = [
  "thiserror 1.0.69",
  "tracing",
@@ -2764,6 +2819,8 @@ dependencies = [
 [[package]]
 name = "nexo-taskflow"
 version = "0.1.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "24d1fb02ab12ffe85c893e71bcb58b46199dc7565ce4dfbf4dcaf2e9ff71e43d"
 dependencies = [
  "anyhow",
  "async-trait",
@@ -2782,6 +2839,8 @@ dependencies = [
 [[package]]
 name = "nexo-team-store"
 version = "0.1.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "7d42c2db4888d244113f584d1058dcf68e19433f0e280d4b5aa4fdf885d5973e"
 dependencies = [
  "anyhow",
  "async-trait",
@@ -2798,6 +2857,8 @@ dependencies = [
 [[package]]
 name = "nexo-tool-meta"
 version = "0.1.15"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "adb676a417a87a1f47ad20a70bfd66d17faeeebb805a4d987a3eda9ac8a9e56a"
 dependencies = [
  "base64 0.22.1",
  "chrono",
@@ -2810,6 +2871,8 @@ dependencies = [
 [[package]]
 name = "nexo-web-search"
 version = "0.1.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "2f812c5fa04fa2936115f4049a353f9f784ccc09533798d9c68e7cbe7479579c"
 dependencies = [
  "async-trait",
  "chrono",
@@ -2830,6 +2893,8 @@ dependencies = [
 [[package]]
 name = "nexo-webhook-receiver"
 version = "0.1.7"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "ffb159bb3dd9b172739aec428db8be9c5f9eeca2ba9ed9242edbeff208c364bd"
 dependencies = [
  "async-trait",
  "bytes",
