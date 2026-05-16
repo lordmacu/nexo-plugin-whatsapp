@@ -186,7 +186,13 @@ fn respond(status: u16, content_type: &str, body: &[u8]) -> Value {
 /// Methods:
 /// - `nexo/admin/whatsapp/bot_info` — plugin metadata + configured instance count.
 /// - `nexo/admin/whatsapp/list_instances` — declared instance ids.
-pub async fn admin_handle(request: &Value) -> Value {
+/// - `nexo/admin/whatsapp/pairing/start` — v0.4.4: spawn the
+///   wa-agent QR pump for `params.challenge_id` + `params.instance`.
+///   QR rotations and terminal state arrive on
+///   `plugin.inbound.whatsapp.<inst>.pairing.{qr,state}`.
+/// - `nexo/admin/whatsapp/pairing/cancel` — v0.4.4: abort an
+///   in-flight pump by `params.challenge_id`. Idempotent.
+pub async fn admin_handle(broker: &AnyBroker, request: &Value) -> Value {
     let method = request
         .get("method")
         .and_then(|v| v.as_str())
@@ -206,6 +212,12 @@ pub async fn admin_handle(request: &Value) -> Value {
         "nexo/admin/whatsapp/list_instances" => {
             let instances = configured_instances().await;
             json!({ "ok": true, "result": { "instances": instances } })
+        }
+        "nexo/admin/whatsapp/pairing/start" => {
+            crate::pairing_admin::pairing_start(broker.clone(), request).await
+        }
+        "nexo/admin/whatsapp/pairing/cancel" => {
+            crate::pairing_admin::pairing_cancel(broker.clone(), request).await
         }
         other => json!({
             "ok": false,
@@ -411,10 +423,14 @@ mod tests {
 
     #[tokio::test(flavor = "multi_thread", worker_threads = 2)]
     async fn admin_bot_info_returns_plugin_metadata() {
-        let r = admin_handle(&json!({
-            "method": "nexo/admin/whatsapp/bot_info",
-            "params": {},
-        }))
+        let broker = AnyBroker::local();
+        let r = admin_handle(
+            &broker,
+            &json!({
+                "method": "nexo/admin/whatsapp/bot_info",
+                "params": {},
+            }),
+        )
         .await;
         assert_eq!(r["ok"].as_bool(), Some(true));
         assert_eq!(r["result"]["plugin"].as_str(), Some("whatsapp"));
@@ -424,10 +440,14 @@ mod tests {
 
     #[tokio::test(flavor = "multi_thread", worker_threads = 2)]
     async fn admin_list_instances_returns_array() {
-        let r = admin_handle(&json!({
-            "method": "nexo/admin/whatsapp/list_instances",
-            "params": {},
-        }))
+        let broker = AnyBroker::local();
+        let r = admin_handle(
+            &broker,
+            &json!({
+                "method": "nexo/admin/whatsapp/list_instances",
+                "params": {},
+            }),
+        )
         .await;
         assert_eq!(r["ok"].as_bool(), Some(true));
         assert!(r["result"]["instances"].is_array());
@@ -435,10 +455,14 @@ mod tests {
 
     #[tokio::test(flavor = "multi_thread", worker_threads = 2)]
     async fn admin_unknown_method_returns_err() {
-        let r = admin_handle(&json!({
-            "method": "nexo/admin/whatsapp/nonexistent",
-            "params": {},
-        }))
+        let broker = AnyBroker::local();
+        let r = admin_handle(
+            &broker,
+            &json!({
+                "method": "nexo/admin/whatsapp/nonexistent",
+                "params": {},
+            }),
+        )
         .await;
         assert_eq!(r["ok"].as_bool(), Some(false));
     }

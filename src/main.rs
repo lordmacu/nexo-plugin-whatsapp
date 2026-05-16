@@ -379,8 +379,8 @@ fn spawn_auto_discovery_subscribers(broker: AnyBroker) {
     spawn_one(broker.clone(), "plugin.whatsapp.metrics.scrape", |_b, p| async move {
         ad::metrics_scrape(&p).await
     });
-    spawn_one(broker, "plugin.whatsapp.admin.>", |_b, p| async move {
-        ad::admin_handle(&p).await
+    spawn_one(broker, "plugin.whatsapp.admin.>", |b, p| async move {
+        ad::admin_handle(&b, &p).await
     });
 }
 

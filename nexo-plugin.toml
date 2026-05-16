@@ -8,7 +8,7 @@
 
 [plugin]
 id              = "whatsapp"
-version         = "0.4.3"
+version         = "0.4.4"
 name            = "WhatsApp Bot"
 description     = "WhatsApp channel plugin via wa-agent (Signal Protocol + Bot API + QR pairing)."
 min_nexo_version = ">=0.1.0"
@@ -58,6 +58,21 @@ en = "Open WhatsApp on your phone → Settings → Linked Devices → Link a dev
 [plugin.pairing.adapter]
 channel_id          = "whatsapp"
 broker_topic_prefix = "plugin.whatsapp"
+
+# Phase 81.20.x Stage 7 Phase 2 — pairing trigger via broker dispatch.
+# Daemon's `BrokerPairingTrigger` reads this section and forwards
+# `pairing/start` and `pairing/cancel` to the plugin admin handler
+# below. Replaces the in-tree `WhatsappPairingTrigger::from_configs`
+# coupling: daemon no longer links this crate.
+#
+# Pump publishes QR rotations + terminal state on
+# `plugin.inbound.whatsapp.<inst>.pairing.{qr,state}` so the daemon's
+# generic pairing-inbound subscriber updates its shared
+# `PairingChallengeStore` without per-channel logic.
+[plugin.pairing.trigger]
+start_method    = "nexo/admin/whatsapp/pairing/start"
+cancel_method   = "nexo/admin/whatsapp/pairing/cancel"
+timeout_seconds = 180
 
 # Phase 81.33.b.real Stage 2 — daemon mounts a generic HTTP proxy
 # under this prefix on `:8080`. Forwards every request via

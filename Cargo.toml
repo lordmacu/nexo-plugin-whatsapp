@@ -14,7 +14,7 @@
 
 [package]
 name        = "nexo-plugin-whatsapp"
-version     = "0.4.3"
+version     = "0.4.4"
 description = "WhatsApp bot plugin for Nexo agents (out-of-tree subprocess + embedded lib)."
 edition     = "2021"
 license     = "MIT OR Apache-2.0"
@@ -74,7 +74,7 @@ nexo-config          = "0.1.9"
 nexo-llm             = "0.1.5"
 nexo-auth            = "0.1.8"
 nexo-pairing         = { version = "0.1.6", default-features = false }
-nexo-plugin-manifest = "0.1.5"
+nexo-plugin-manifest = "0.1.6"
 nexo-tool-meta       = "0.1.15"
 
 # Upstream wa-agent — wraps Signal Protocol + QR pairing + Bot API.
