@@ -12,8 +12,16 @@ env:
 
 jobs:
   build-test:
-    name: build + test
-    runs-on: ubuntu-latest
+    name: build + test (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    # 3-OS matrix mirrors the release.yml target list so macOS /
+    # Windows regressions surface at PR time instead of release
+    # time. fmt + clippy are OS-independent — run only on ubuntu
+    # to keep the matrix lean.
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-14, windows-latest]
     steps:
       - uses: actions/checkout@v4
         with:
@@ -36,11 +44,14 @@ jobs:
       - uses: Swatinem/rust-cache@v2
         with:
           workspaces: nexo-rs-plugin-whatsapp
+          key: ${{ matrix.os }}
       # `--all` would walk the path-dep'd proyecto crates and
       # fail on unrelated drift; restrict to this package.
-      - working-directory: nexo-rs-plugin-whatsapp
+      - if: matrix.os == 'ubuntu-latest'
+        working-directory: nexo-rs-plugin-whatsapp
         run: cargo fmt -- --check
-      - working-directory: nexo-rs-plugin-whatsapp
+      - if: matrix.os == 'ubuntu-latest'
+        working-directory: nexo-rs-plugin-whatsapp
         run: cargo clippy --all-targets --no-deps -- -D warnings
       - working-directory: nexo-rs-plugin-whatsapp
         run: cargo build --locked
