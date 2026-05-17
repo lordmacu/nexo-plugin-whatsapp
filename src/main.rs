@@ -184,7 +184,13 @@ async fn main() -> anyhow::Result<()> {
         return nexo_plugin_whatsapp::session::pair_once(&session_path).await;
     }
 
+    // Stdout is the JSON-RPC reply channel — tracing logs MUST go to
+    // stderr so they never get mixed into the dispatch loop's reply
+    // stream (caught by `tests/e2e_handshake.rs` when the boot WARN
+    // about no NEXO_BROKER_URL was sneaking onto stdout and the test
+    // failed `serde_json::from_str` on the first read_line).
     tracing_subscriber::fmt()
+        .with_writer(std::io::stderr)
         .with_env_filter(
             tracing_subscriber::EnvFilter::try_from_default_env()
                 .unwrap_or_else(|_| tracing_subscriber::EnvFilter::new("info")),
