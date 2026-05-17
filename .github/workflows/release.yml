@@ -130,10 +130,28 @@ jobs:
       - uses: actions/download-artifact@v4
         with:
           path: dist/
+      # Dedupe nexo-plugin.toml — each matrix entry uploads its own
+      # copy (N artifacts × 1 toml each), so `dist/**/nexo-plugin.toml`
+      # matches N paths. softprops/action-gh-release then tries to
+      # upload the same filename N× in parallel → "asset already
+      # exists" 422 race. Collapse to a single canonical copy at
+      # `dist/nexo-plugin.toml` before the upload glob runs.
+      - name: Dedupe nexo-plugin.toml + sort tarballs
+        run: |
+          set -euo pipefail
+          ANY_TOML="$(find dist -type f -name nexo-plugin.toml | head -1)"
+          if [ -z "${ANY_TOML}" ]; then
+            echo "::error::no nexo-plugin.toml in artifacts"
+            exit 1
+          fi
+          find dist -type f -name nexo-plugin.toml -delete
+          cp "${ANY_TOML}" dist/nexo-plugin.toml
+          echo "Final upload set:"
+          find dist -maxdepth 2 -type f \( -name '*.tar.gz' -o -name '*.tar.gz.sha256' -o -name 'nexo-plugin.toml' \) | sort
       - uses: softprops/action-gh-release@v2
         with:
           files: |
             dist/**/*.tar.gz
             dist/**/*.tar.gz.sha256
-            dist/**/nexo-plugin.toml
+            dist/nexo-plugin.toml
           generate_release_notes: true
