@@ -6,11 +6,11 @@
 
 use std::sync::Arc;
 
+use crate::config::WhatsappPluginConfig;
 use anyhow::{Context, Result};
 use async_trait::async_trait;
 use dashmap::DashMap;
 use nexo_broker::{AnyBroker, BrokerHandle, Event};
-use crate::config::WhatsappPluginConfig;
 use nexo_core::agent::plugin::{Command, Plugin, Response};
 use nexo_core::agent::plugin_host::{
     NexoPlugin, PluginInitContext, PluginInitError, PluginShutdownError,

@@ -10,8 +10,7 @@ use tokio::sync::RwLock;
 
 use crate::config::WhatsappPluginConfig;
 
-static CONFIGURED: OnceLock<Arc<RwLock<Option<Vec<WhatsappPluginConfig>>>>> =
-    OnceLock::new();
+static CONFIGURED: OnceLock<Arc<RwLock<Option<Vec<WhatsappPluginConfig>>>>> = OnceLock::new();
 
 /// Returns the process-wide configured-state cell, initialising
 /// it on first access. The inner `Option` is `None` until the host

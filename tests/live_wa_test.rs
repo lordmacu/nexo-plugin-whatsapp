@@ -26,12 +26,12 @@
 use std::time::Duration;
 
 use nexo_broker::AnyBroker;
+use nexo_core::agent::plugin::{Command, Plugin, Response};
+use nexo_plugin_whatsapp::WhatsappPlugin;
 use nexo_plugin_whatsapp::{
     WhatsappAclConfig, WhatsappBehaviorConfig, WhatsappBridgeConfig, WhatsappDaemonConfig,
     WhatsappPluginConfig, WhatsappRateLimitConfig, WhatsappTranscriberConfig,
 };
-use nexo_core::agent::plugin::{Command, Plugin, Response};
-use nexo_plugin_whatsapp::WhatsappPlugin;
 
 fn live_cfg(session_dir: String) -> WhatsappPluginConfig {
     WhatsappPluginConfig {

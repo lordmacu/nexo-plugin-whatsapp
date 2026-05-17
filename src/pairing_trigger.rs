@@ -35,8 +35,8 @@ use std::path::PathBuf;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::Arc;
 
-use async_trait::async_trait;
 use crate::config::WhatsappPluginConfig;
+use async_trait::async_trait;
 use nexo_core::agent::admin_rpc::pairing_trigger::{
     PairingChannelTrigger, PairingContext, PairingHandle, PairingTriggerError,
 };

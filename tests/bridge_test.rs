@@ -6,13 +6,13 @@ use std::time::Duration;
 
 use dashmap::DashMap;
 use nexo_broker::{AnyBroker, BrokerHandle, Event};
+use nexo_plugin_whatsapp::bridge::{bridge_step, TOPIC_INBOUND};
+use nexo_plugin_whatsapp::events::InboundEvent;
+use nexo_plugin_whatsapp::session_id::session_id_for_jid;
 use nexo_plugin_whatsapp::{
     WhatsappAclConfig, WhatsappBehaviorConfig, WhatsappBridgeConfig, WhatsappDaemonConfig,
     WhatsappPluginConfig, WhatsappRateLimitConfig, WhatsappTranscriberConfig,
 };
-use nexo_plugin_whatsapp::bridge::{bridge_step, TOPIC_INBOUND};
-use nexo_plugin_whatsapp::events::InboundEvent;
-use nexo_plugin_whatsapp::session_id::session_id_for_jid;
 
 fn cfg(timeout_ms: u64) -> WhatsappPluginConfig {
     WhatsappPluginConfig {

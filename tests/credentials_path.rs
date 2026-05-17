@@ -120,8 +120,7 @@ async fn resolve_bytes_returns_serde_json_encoded_config() {
     );
     *configured_state().write().await = Some(cfgs);
     let bytes = resolve_bytes_handler("main").await.expect("resolve ok");
-    let decoded: WhatsappPluginConfig =
-        serde_json::from_slice(&bytes).expect("round-trip");
+    let decoded: WhatsappPluginConfig = serde_json::from_slice(&bytes).expect("round-trip");
     assert_eq!(decoded.instance.as_deref(), Some("main"));
     assert_eq!(decoded.session_dir, "./data/wa-main");
     *configured_state().write().await = None;

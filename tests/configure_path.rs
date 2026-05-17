@@ -39,13 +39,11 @@ async fn configure_unknown_field_errors() {
 #[tokio::test]
 #[serial]
 async fn configure_overwrites_on_hot_reload_recall() {
-    let value_a: serde_yaml::Value =
-        serde_yaml::from_str(r#"- session_dir: "/tmp/a""#).unwrap();
+    let value_a: serde_yaml::Value = serde_yaml::from_str(r#"- session_dir: "/tmp/a""#).unwrap();
     let parsed_a: Vec<WhatsappPluginConfig> = serde_yaml::from_value(value_a).unwrap();
     *configured_state().write().await = Some(parsed_a);
 
-    let value_b: serde_yaml::Value =
-        serde_yaml::from_str(r#"- session_dir: "/tmp/b""#).unwrap();
+    let value_b: serde_yaml::Value = serde_yaml::from_str(r#"- session_dir: "/tmp/b""#).unwrap();
     let parsed_b: Vec<WhatsappPluginConfig> = serde_yaml::from_value(value_b).unwrap();
     *configured_state().write().await = Some(parsed_b);
 

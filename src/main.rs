@@ -337,8 +337,8 @@ async fn auto_discovery_broker() -> anyhow::Result<AnyBroker> {
             .ok_or_else(|| anyhow::anyhow!("BRIDGE not initialized"))?;
         return Ok(AnyBroker::stdio_bridge((**bridge).clone()));
     }
-    let url = std::env::var("NEXO_BROKER_URL")
-        .map_err(|_| anyhow::anyhow!("NEXO_BROKER_URL not set"))?;
+    let url =
+        std::env::var("NEXO_BROKER_URL").map_err(|_| anyhow::anyhow!("NEXO_BROKER_URL not set"))?;
     let inner = nexo_config::types::broker::BrokerInner {
         kind: if url.starts_with("nats://") {
             nexo_config::types::broker::BrokerKind::Nats
@@ -364,21 +364,31 @@ async fn auto_discovery_broker() -> anyhow::Result<AnyBroker> {
 fn spawn_auto_discovery_subscribers(broker: AnyBroker) {
     use nexo_plugin_whatsapp::auto_discovery as ad;
 
-    spawn_one(broker.clone(), "plugin.whatsapp.pairing.normalize_sender", |_b, p| async move {
-        ad::pairing_normalize_sender(&p)
-    });
-    spawn_one(broker.clone(), "plugin.whatsapp.pairing.send_reply", |b, p| async move {
-        ad::pairing_send_reply(&b, &p).await
-    });
-    spawn_one(broker.clone(), "plugin.whatsapp.pairing.send_qr_image", |b, p| async move {
-        ad::pairing_send_qr_image(&b, &p).await
-    });
-    spawn_one(broker.clone(), "plugin.whatsapp.http.request", |_b, p| async move {
-        ad::http_request(&p).await
-    });
-    spawn_one(broker.clone(), "plugin.whatsapp.metrics.scrape", |_b, p| async move {
-        ad::metrics_scrape(&p).await
-    });
+    spawn_one(
+        broker.clone(),
+        "plugin.whatsapp.pairing.normalize_sender",
+        |_b, p| async move { ad::pairing_normalize_sender(&p) },
+    );
+    spawn_one(
+        broker.clone(),
+        "plugin.whatsapp.pairing.send_reply",
+        |b, p| async move { ad::pairing_send_reply(&b, &p).await },
+    );
+    spawn_one(
+        broker.clone(),
+        "plugin.whatsapp.pairing.send_qr_image",
+        |b, p| async move { ad::pairing_send_qr_image(&b, &p).await },
+    );
+    spawn_one(
+        broker.clone(),
+        "plugin.whatsapp.http.request",
+        |_b, p| async move { ad::http_request(&p).await },
+    );
+    spawn_one(
+        broker.clone(),
+        "plugin.whatsapp.metrics.scrape",
+        |_b, p| async move { ad::metrics_scrape(&p).await },
+    );
     spawn_one(broker, "plugin.whatsapp.admin.>", |b, p| async move {
         ad::admin_handle(&b, &p).await
     });
@@ -431,6 +441,10 @@ where
                 );
             }
         }
-        tracing::debug!(target = "whatsapp.auto_discovery", topic, "subscriber stream ended");
+        tracing::debug!(
+            target = "whatsapp.auto_discovery",
+            topic,
+            "subscriber stream ended"
+        );
     });
 }

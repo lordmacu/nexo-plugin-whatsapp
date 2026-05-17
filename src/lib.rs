@@ -25,11 +25,11 @@
 pub mod auto_discovery;
 pub mod bot_registry;
 pub mod bridge;
+pub mod config;
+pub mod configured_state;
 pub mod dispatch;
 pub mod env_config;
 pub mod events;
-pub mod config;
-pub mod configured_state;
 pub mod lifecycle;
 pub mod media;
 pub mod pairing;

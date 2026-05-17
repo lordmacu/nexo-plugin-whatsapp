@@ -54,9 +54,9 @@ async fn resolve_session_dir(instance: Option<&str>) -> Option<(String, PathBuf)
     let guard = configured_state().read().await;
     let cfgs = guard.as_ref()?;
     let target = instance.unwrap_or("");
-    let matched = cfgs.iter().find(|c| {
-        c.instance.as_deref().unwrap_or("") == target
-    });
+    let matched = cfgs
+        .iter()
+        .find(|c| c.instance.as_deref().unwrap_or("") == target);
     let chosen = matched.or_else(|| cfgs.first())?;
     let label = chosen
         .instance
@@ -66,7 +66,11 @@ async fn resolve_session_dir(instance: Option<&str>) -> Option<(String, PathBuf)
 }
 
 fn inbound_topic(instance: &str, suffix: &str) -> String {
-    let inst = if instance.is_empty() { "default" } else { instance };
+    let inst = if instance.is_empty() {
+        "default"
+    } else {
+        instance
+    };
     format!("plugin.inbound.whatsapp.{inst}.pairing.{suffix}")
 }
 
@@ -189,8 +193,7 @@ pub async fn pairing_start(broker: AnyBroker, request: &Value) -> Value {
         // wa-agent's `pair_with_callback` takes a SYNC FnMut.
         // Bridge to broker publishes via a tokio mpsc so the
         // sync closure stays panic-free.
-        let (qr_tx, mut qr_rx) =
-            tokio::sync::mpsc::unbounded_channel::<(String, String, u64)>();
+        let (qr_tx, mut qr_rx) = tokio::sync::mpsc::unbounded_channel::<(String, String, u64)>();
         let qr_fired_for_closure = qr_fired.clone();
         let on_qr = move |png_b64: String, ascii: String, expires_at_ms: u64| {
             qr_fired_for_closure.store(true, Ordering::SeqCst);
@@ -292,7 +295,13 @@ pub async fn pairing_start(broker: AnyBroker, request: &Value) -> Value {
         pumps().remove(&challenge_id);
     });
 
-    pumps().insert(challenge_id, PumpHandle { cancel, _task: task });
+    pumps().insert(
+        challenge_id,
+        PumpHandle {
+            cancel,
+            _task: task,
+        },
+    );
 
     json!({
         "ok": true,
@@ -353,7 +362,10 @@ mod tests {
         let r = pairing_start(broker, &json!({ "method": "...", "params": {} })).await;
         assert_eq!(r["ok"].as_bool(), Some(false));
         assert!(
-            r["error"].as_str().unwrap().contains("missing challenge_id"),
+            r["error"]
+                .as_str()
+                .unwrap()
+                .contains("missing challenge_id"),
             "expected missing-challenge_id error, got: {r}",
         );
     }
@@ -370,7 +382,10 @@ mod tests {
         .await;
         assert_eq!(r["ok"].as_bool(), Some(false));
         assert!(
-            r["error"].as_str().unwrap().contains("invalid challenge_id"),
+            r["error"]
+                .as_str()
+                .unwrap()
+                .contains("invalid challenge_id"),
             "expected invalid-challenge_id error, got: {r}",
         );
     }
@@ -421,11 +436,7 @@ mod tests {
     async fn pairing_cancel_rejects_invalid_challenge_id() {
         clear_in_flight();
         let broker = AnyBroker::local();
-        let r = pairing_cancel(
-            broker,
-            &json!({ "params": { "challenge_id": "bad" } }),
-        )
-        .await;
+        let r = pairing_cancel(broker, &json!({ "params": { "challenge_id": "bad" } })).await;
         assert_eq!(r["ok"].as_bool(), Some(false));
     }
 

@@ -144,11 +144,9 @@ pub async fn http_request(request: &Value) -> Value {
         .and_then(|v| v.as_str())
         .unwrap_or("GET");
     match (method, path) {
-        ("GET", "/whatsapp/health") => respond(
-            200,
-            "text/plain; charset=utf-8",
-            b"whatsapp plugin ok\n",
-        ),
+        ("GET", "/whatsapp/health") => {
+            respond(200, "text/plain; charset=utf-8", b"whatsapp plugin ok\n")
+        }
         ("GET", "/whatsapp/status") => {
             let instances = configured_instances().await;
             let body = json!({
@@ -193,10 +191,7 @@ fn respond(status: u16, content_type: &str, body: &[u8]) -> Value {
 /// - `nexo/admin/whatsapp/pairing/cancel` — v0.4.4: abort an
 ///   in-flight pump by `params.challenge_id`. Idempotent.
 pub async fn admin_handle(broker: &AnyBroker, request: &Value) -> Value {
-    let method = request
-        .get("method")
-        .and_then(|v| v.as_str())
-        .unwrap_or("");
+    let method = request.get("method").and_then(|v| v.as_str()).unwrap_or("");
     match method {
         "nexo/admin/whatsapp/bot_info" => {
             let instances = configured_instances().await;
@@ -253,11 +248,7 @@ async fn configured_instances() -> Vec<String> {
     let guard = configured_state().read().await;
     guard
         .as_ref()
-        .map(|cfgs| {
-            cfgs.iter()
-                .filter_map(|c| c.instance.clone())
-                .collect()
-        })
+        .map(|cfgs| cfgs.iter().filter_map(|c| c.instance.clone()).collect())
         .unwrap_or_default()
 }
 
