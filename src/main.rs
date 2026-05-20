@@ -214,6 +214,28 @@ async fn main() -> anyhow::Result<()> {
                 serde_yaml::from_value(value)
                     .map_err(|e| format!("invalid whatsapp config: {e}"))?;
             *nexo_plugin_whatsapp::configured_state().write().await = Some(parsed);
+            // Phase 97 — kick off the long-lived inbound loop
+            // as soon as configure delivers a usable instance.
+            // Without this the wa-agent pump owns the WS
+            // connection only during the QR pair window;
+            // post-pair the connection drops and nothing
+            // surfaces inbound messages on
+            // `plugin.inbound.whatsapp.<inst>`. Errors fall
+            // back to lazy-start-on-first-tool-invoke so a
+            // transient bootstrap failure (e.g. wa-agent
+            // can't resolve session_dir mid-pair) doesn't
+            // take the whole plugin offline.
+            match shared_plugin().await {
+                Ok(_) => tracing::info!(
+                    target = "nexo_plugin_whatsapp",
+                    "eager start ok (inbound loop active)"
+                ),
+                Err(e) => tracing::warn!(
+                    target = "nexo_plugin_whatsapp",
+                    error = %e,
+                    "eager start failed; falling back to lazy start on first tool.invoke"
+                ),
+            }
             Ok(())
         })
         // Phase 93.8.b — credential-store handlers. Daemon-side

@@ -16,6 +16,19 @@ min_nexo_version = ">=0.1.0"
 [plugin.requires]
 nexo_capabilities = ["broker"]
 
+# Declarative extension contributions. Daemon validates the
+# `initialize` reply `tools` array against this list — every advertised
+# tool MUST appear here. Tool names follow the `<plugin_id>_*`
+# namespace rule.
+[plugin.extends]
+channels = ["whatsapp"]
+tools = [
+    "whatsapp_send_message",
+    "whatsapp_send_reply",
+    "whatsapp_send_reaction",
+    "whatsapp_send_media",
+]
+
 # Phase 82.15.bx — explicit broker allowlist. Defense-in-depth so a
 # misbehaving plugin can't broadcast outside the topics it declared.
 # `>` matches the per-instance suffix (`whatsapp.<instance>` and
@@ -45,6 +58,20 @@ publish   = ["plugin.inbound.whatsapp",  "plugin.inbound.whatsapp.>"]
 [plugin.pairing]
 kind  = "qr"
 label = "WhatsApp"
+# Phase 97 — explicit instance label. Even for QR pairing, the
+# admin wizard MUST ask the operator for a short label so the
+# daemon stamps `whatsapp.yaml::instance` and the agent binding
+# subscribes to the right `plugin.inbound.whatsapp.<instance>`
+# topic. Multi-account support (1 daemon driving N WhatsApp bots)
+# depends on this label being unique per account.
+instance_field = "instance"
+
+[[plugin.pairing.fields]]
+name        = "instance"
+label       = "Nombre de cuenta"
+placeholder = "ventas"
+help        = "Etiqueta corta para distinguir esta cuenta de otras WhatsApp del mismo daemon (sin espacios)."
+required    = true
 
 [plugin.pairing.instructions]
 es = "Abrí WhatsApp en tu teléfono → Configuración → Dispositivos vinculados → Vincular un dispositivo, y escaneá el código QR."
@@ -190,3 +217,52 @@ schema = '''{
 [plugin.credentials_schema]
 enabled = true
 accounts_shape = "array"
+
+# ────────────────────────────────────────────────────────────────
+# Phase 99 — admin UI contribution (Mode A, declarative).
+# Static config screen; daemon synthesises the form + validates a
+# save against `[plugin.config_schema]` (merged) + hot-applies. The
+# Signal session / paired credentials stay out (managed via QR
+# pairing); partial saves keep them. Needs manifest >= 0.1.8.
+# ────────────────────────────────────────────────────────────────
+[plugin.admin_ui]
+schema_version = 1
+mode           = "declarative"
+describe       = false
+
+[[plugin.admin_ui.contributions]]
+id     = "whatsapp"
+slot   = "plugin.whatsapp.root"
+label  = "WhatsApp"
+icon   = "message-circle"
+order  = 1000
+screen = "settings"
+
+[[plugin.admin_ui.screens]]
+id    = "settings"
+title = "WhatsApp Settings"
+
+[[plugin.admin_ui.screens.fields]]
+key   = "enabled"
+type  = "toggle"
+label = "Enabled"
+
+[[plugin.admin_ui.screens.fields]]
+key   = "instance"
+type  = "text"
+label = "Instance label"
+
+[[plugin.admin_ui.screens.fields]]
+key   = "session_dir"
+type  = "text"
+label = "Session dir"
+
+[[plugin.admin_ui.screens.fields]]
+key   = "media_dir"
+type  = "text"
+label = "Media dir"
+
+[[plugin.admin_ui.screens.fields]]
+key   = "typing_mode"
+type  = "text"
+label = "Typing mode"

@@ -65,6 +65,13 @@ pub async fn bridge_step(
     event_payload: InboundEvent,
 ) -> Option<String> {
     let inbound_topic = inbound_topic_for(cfg.instance.as_deref());
+    tracing::info!(
+        target: "whatsapp.bridge",
+        %session_id,
+        topic = %inbound_topic,
+        timeout_ms = cfg.bridge.response_timeout_ms,
+        "bridge_step entered — about to publish inbound + await reply"
+    );
     let (tx, rx) = oneshot::channel::<String>();
     // Last inbound wins: if a previous message on this session is still
     // awaiting, its handler sees a dropped sender and falls through to
@@ -78,6 +85,12 @@ pub async fn bridge_step(
         pending.remove(&session_id);
         return None;
     }
+    tracing::info!(
+        target: "whatsapp.bridge",
+        %session_id,
+        topic = %inbound_topic,
+        "broker.publish ok — awaiting agent reply"
+    );
 
     match tokio::time::timeout(Duration::from_millis(cfg.bridge.response_timeout_ms), rx).await {
         Ok(Ok(text)) => Some(text),
@@ -121,7 +134,20 @@ pub fn build_handler(
         let cfg = cfg.clone();
         let session = session.clone();
         Box::pin(async move {
+            tracing::info!(
+                target: "whatsapp.bridge",
+                msg_id = %ctx.msg.key.id,
+                remote_jid = %ctx.msg.key.remote_jid,
+                from_me = ctx.msg.key.from_me,
+                text_len = ctx.text.as_deref().map(|t| t.len()).unwrap_or(0),
+                "handler ENTRY — wa-agent dispatched message to bridge handler"
+            );
             if cfg.behavior.ignore_groups && ctx.msg.key.remote_jid.ends_with("@g.us") {
+                tracing::info!(
+                    target: "whatsapp.bridge",
+                    msg_id = %ctx.msg.key.id,
+                    "skip: ignore_groups + @g.us"
+                );
                 return Response::Noop;
             }
             // Drop offline backlog older than the configured
@@ -130,6 +156,13 @@ pub fn build_handler(
             // them; without this gate the agent replies to the same
             // stale backlog after every daemon restart. The check is
             // a no-op when `skip_backlog_age_secs == 0`.
+            tracing::info!(
+                target: "whatsapp.bridge",
+                msg_id = %ctx.msg.key.id,
+                skip_backlog_age_secs = cfg.behavior.skip_backlog_age_secs,
+                msg_timestamp = ctx.msg.message_timestamp,
+                "pre-age check"
+            );
             if cfg.behavior.skip_backlog_age_secs > 0 {
                 let now_secs = std::time::SystemTime::now()
                     .duration_since(std::time::UNIX_EPOCH)
@@ -138,6 +171,7 @@ pub fn build_handler(
                 let age_secs = now_secs.saturating_sub(ctx.msg.message_timestamp);
                 if age_secs > cfg.behavior.skip_backlog_age_secs {
                     tracing::info!(
+                        target: "whatsapp.bridge",
                         msg_id = %ctx.msg.key.id,
                         age_secs,
                         threshold = cfg.behavior.skip_backlog_age_secs,
@@ -146,6 +180,11 @@ pub fn build_handler(
                     return Response::Noop;
                 }
             }
+            tracing::info!(
+                target: "whatsapp.bridge",
+                msg_id = %ctx.msg.key.id,
+                "post-age check, before audio"
+            );
 
             // Audio inbound: download synchronously so the
             // `InboundEvent::Message` payload includes media_path /
@@ -209,6 +248,12 @@ pub fn build_handler(
                 ),
                 None => (None, None, None),
             };
+            tracing::info!(
+                target: "whatsapp.bridge",
+                msg_id = %ctx.msg.key.id,
+                session_id = %session_id,
+                "about to call bridge_step"
+            );
             let payload = InboundEvent::Message {
                 from: ctx.sender().to_string(),
                 chat: ctx.jid().to_string(),

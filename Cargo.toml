@@ -74,7 +74,7 @@ nexo-config          = "0.1.9"
 nexo-llm             = "0.1.5"
 nexo-auth            = "0.1.8"
 nexo-pairing         = { version = "0.1.6", default-features = false }
-nexo-plugin-manifest = "0.1.6"
+nexo-plugin-manifest = "0.1.8"
 nexo-tool-meta       = "0.1.15"
 
 # Upstream wa-agent — wraps Signal Protocol + QR pairing + Bot API.

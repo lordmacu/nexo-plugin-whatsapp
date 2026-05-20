@@ -2731,9 +2731,9 @@ dependencies = [
 
 [[package]]
 name = "nexo-plugin-manifest"
-version = "0.1.6"
+version = "0.1.8"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d67d60441ffe7ebf3fb6ffbb1368a4dbf87db2e1d52e7cc0346ee9eef57c6114"
+checksum = "0aa9a3c414c262052767566fdd78e9b1c77d018395342cacc5bf153c8b1c2b63"
 dependencies = [
  "anyhow",
  "regex",
