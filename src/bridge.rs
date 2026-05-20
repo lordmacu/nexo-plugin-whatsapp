@@ -65,7 +65,7 @@ pub async fn bridge_step(
     event_payload: InboundEvent,
 ) -> Option<String> {
     let inbound_topic = inbound_topic_for(cfg.instance.as_deref());
-    tracing::info!(
+    tracing::debug!(
         target: "whatsapp.bridge",
         %session_id,
         topic = %inbound_topic,
@@ -85,7 +85,7 @@ pub async fn bridge_step(
         pending.remove(&session_id);
         return None;
     }
-    tracing::info!(
+    tracing::debug!(
         target: "whatsapp.bridge",
         %session_id,
         topic = %inbound_topic,
@@ -134,7 +134,7 @@ pub fn build_handler(
         let cfg = cfg.clone();
         let session = session.clone();
         Box::pin(async move {
-            tracing::info!(
+            tracing::debug!(
                 target: "whatsapp.bridge",
                 msg_id = %ctx.msg.key.id,
                 remote_jid = %ctx.msg.key.remote_jid,
@@ -143,7 +143,7 @@ pub fn build_handler(
                 "handler ENTRY — wa-agent dispatched message to bridge handler"
             );
             if cfg.behavior.ignore_groups && ctx.msg.key.remote_jid.ends_with("@g.us") {
-                tracing::info!(
+                tracing::debug!(
                     target: "whatsapp.bridge",
                     msg_id = %ctx.msg.key.id,
                     "skip: ignore_groups + @g.us"
@@ -156,7 +156,7 @@ pub fn build_handler(
             // them; without this gate the agent replies to the same
             // stale backlog after every daemon restart. The check is
             // a no-op when `skip_backlog_age_secs == 0`.
-            tracing::info!(
+            tracing::debug!(
                 target: "whatsapp.bridge",
                 msg_id = %ctx.msg.key.id,
                 skip_backlog_age_secs = cfg.behavior.skip_backlog_age_secs,
@@ -170,7 +170,7 @@ pub fn build_handler(
                     .unwrap_or(ctx.msg.message_timestamp);
                 let age_secs = now_secs.saturating_sub(ctx.msg.message_timestamp);
                 if age_secs > cfg.behavior.skip_backlog_age_secs {
-                    tracing::info!(
+                    tracing::debug!(
                         target: "whatsapp.bridge",
                         msg_id = %ctx.msg.key.id,
                         age_secs,
@@ -180,7 +180,7 @@ pub fn build_handler(
                     return Response::Noop;
                 }
             }
-            tracing::info!(
+            tracing::debug!(
                 target: "whatsapp.bridge",
                 msg_id = %ctx.msg.key.id,
                 "post-age check, before audio"
@@ -248,7 +248,7 @@ pub fn build_handler(
                 ),
                 None => (None, None, None),
             };
-            tracing::info!(
+            tracing::debug!(
                 target: "whatsapp.bridge",
                 msg_id = %ctx.msg.key.id,
                 session_id = %session_id,
