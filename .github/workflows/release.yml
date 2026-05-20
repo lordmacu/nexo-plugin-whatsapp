@@ -139,7 +139,7 @@ jobs:
       - name: Dedupe nexo-plugin.toml + sort tarballs
         run: |
           set -euo pipefail
-          ANY_TOML="$(find dist -type f -name nexo-plugin.toml | head -1)"
+          ANY_TOML="$(find dist -type f -name nexo-plugin.toml -print -quit)"
           if [ -z "${ANY_TOML}" ]; then
             echo "::error::no nexo-plugin.toml in artifacts"
             exit 1
