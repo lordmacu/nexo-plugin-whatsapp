@@ -144,8 +144,11 @@ jobs:
             echo "::error::no nexo-plugin.toml in artifacts"
             exit 1
           fi
+          TMP_TOML="$(mktemp)"
+          cp "${ANY_TOML}" "${TMP_TOML}"
           find dist -type f -name nexo-plugin.toml -delete
-          cp "${ANY_TOML}" dist/nexo-plugin.toml
+          cp "${TMP_TOML}" dist/nexo-plugin.toml
+          rm -f "${TMP_TOML}"
           echo "Final upload set:"
           find dist -maxdepth 2 -type f \( -name '*.tar.gz' -o -name '*.tar.gz.sha256' -o -name 'nexo-plugin.toml' \) | sort
       - uses: softprops/action-gh-release@v2
